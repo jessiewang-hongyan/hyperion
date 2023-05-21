@@ -5,11 +5,11 @@
 #
 
 #$ -N malawi_prepare
-#$ -j y -o log.malawi_prepare
+#$ -j y -o /export/c12/ywang793/logs/log.malawi_prepare
 #$ -M ywang793@jh.edu
 #$ -m e
 #$ -l ram_free=20G,mem_free=20G,gpu=1,hostname=c0*|c1[0123456789]
-#$ -wd /export/c12/ywang793/vad_malawi
+#$ -wd /export/fs05/ywang793/hyperion/egs/malawi/v1
 # Submit to GPU
 #$ -q g.q
 
