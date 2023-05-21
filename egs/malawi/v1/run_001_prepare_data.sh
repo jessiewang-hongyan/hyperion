@@ -13,6 +13,11 @@
 # Submit to GPU
 #$ -q g.q
 
+log_file='/export/c12/ywang793/logs/log.dihard2019_prepare'
+echo "------------
+working directory: $(pwd)
+---------------" >> "$log_file"
+
 
 . ./cmd.sh
 . ./path.sh
@@ -21,7 +26,7 @@ set -e
 stage=1
 config_file=default_config.sh
 
-. parse_options.sh || exit 1;
+. $HYP_ROOT/hyp_utils/parse_options.sh || exit 1;
 . datapath.sh 
 
 if [ $stage -le 1 ];then
