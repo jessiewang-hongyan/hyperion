@@ -14,7 +14,9 @@
 #$ -q g.q
 
 log_file='/export/c12/ywang793/logs/log.dihard2019_prepare'
-echo "working directory: ($pwd)" >> "$log_file"
+echo "------------
+working directory: $(pwd)
+---------------" >> "$log_file"
 
 . ./cmd.sh
 . ./path.sh
