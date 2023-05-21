@@ -9,6 +9,9 @@ if [ "$(hostname --domain)" == "clsp.jhu.edu" ];then
     voxceleb1_root=/export/corpora5/VoxCeleb1_v1
     voxceleb2_root=/export/corpora5/VoxCeleb2
     musan_root=/export/corpora5/JHU/musan
+
+    malawi_dir=/export/fs05/leibny/CCWD-Fe62023/langdev
+    data_dir=/export/fs05/ywang793/malawi_data
 elif [ "$(hostname --domain)" == "cm.gemini" ];then
     voxceleb1_root=/expscratch/dsnyder/VoxCeleb1
     voxceleb2_root=/expscratch/dgromero/corpora-open/vox2

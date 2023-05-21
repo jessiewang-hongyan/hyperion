@@ -3,6 +3,17 @@
 #                2018   Johns Hopkins University (Author: Jesus Villalba)
 # Apache 2.0.
 #
+
+#$ -N malawi_prepare
+#$ -j y -o log.malawi_prepare
+#$ -M ywang793@jh.edu
+#$ -m e
+#$ -l ram_free=20G,mem_free=20G,gpu=1,hostname=c0*|c1[0123456789]
+#$ -wd /export/c12/ywang793/vad_malawi
+# Submit to GPU
+#$ -q g.q
+
+
 . ./cmd.sh
 . ./path.sh
 set -e
@@ -25,6 +36,7 @@ fi
 
 if [ $stage -le 2 ];then
     # prepare Dihard2019
-    local/make_dihard2019.sh $dihard2019_dev data/dihard2019_dev
-    local/make_dihard2019.sh $dihard2019_eval data/dihard2019_eval
+#    local/make_dihard2019.sh $dihard2019_dev data/dihard2019_dev
+#    local/make_dihard2019.sh $dihard2019_eval data/dihard2019_eval
+    local/make_dihard2019.sh
 fi

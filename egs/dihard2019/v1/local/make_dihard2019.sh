@@ -4,22 +4,25 @@
 #
 # Creates the DIHARD 2019 data directories.
 
-if [ $# != 2 ]; then
-  echo "Usage: $0 <dihard-dir> <data-dir>"
-  echo " e.g.: $0 /export/corpora/LDC/LDC2019E31 data/dihard2019_dev"
-fi
+#if [ $# != 2 ]; then
+#  echo "Usage: $0 <dihard-dir> <data-dir>"
+#  echo " e.g.: $0 /export/corpora/LDC/LDC2019E31 data/dihard2019_dev"
+#fi
 
-dihard_dir=$1/data/single_channel
-data_dir=$2
+#dihard_dir=$1/data/single_channel
+#data_dir=$2
+
+dihard_dir=/export/fs05/leibny/CCWD-Fe62023/langdev
+data_dir=/export/fs05/ywang793/malawi_data
 
 echo "making data dir $data_dir"
 
 mkdir -p $data_dir
 
-find $dihard_dir -name "*.flac" | \
+find $dihard_dir -name "*.mp3" | \
     awk '
-{ bn=$1; sub(/.*\//,"",bn); sub(/\.flac$/,"",bn); 
-  print bn, "sox "$1" -t wav -b 16 -e signed-integer - |" }' | sort -k1,1 > $data_dir/wav.scp
+{ bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
+  print bn, "ffmpeg -i "$1" "$1".wav - |" }' | sort -k1,1 > $data_dir/wav.scp
 
 awk '{ print $1,$1}' $data_dir/wav.scp  > $data_dir/utt2spk
 cat $data_dir/utt2spk > $data_dir/spk2utt
