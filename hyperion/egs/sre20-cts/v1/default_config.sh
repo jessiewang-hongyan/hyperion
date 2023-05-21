@@ -1,0 +1,1 @@
+global_conf/config_fbank64_stmn_resnet34_eina_hln_chattstatsi128_arcs30m0.3_trn_alllangs_nocv_nocnceleb_adam_lr0.01.amp.v1.sh
