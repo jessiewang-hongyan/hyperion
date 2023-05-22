@@ -6,6 +6,14 @@
 #                2017   Johns Hopkins University (Author: Daniel Povey)
 # Apache 2.0.
 #
+#$ -N malawi_prepare
+#$ -j y -o /export/c12/ywang793/logs/log.malawi_vad
+#$ -M ywang793@jh.edu
+#$ -m e
+#$ -wd /export/fs05/ywang793/hyperion/egs/malawi/v1
+# Submit to GPU
+#$ -q g.q
+
 . ./cmd.sh
 . ./path.sh
 set -e
@@ -13,6 +21,7 @@ nodes=fs01
 storage_name=$(date +'%m_%d_%H_%M')
 mfccdir=`pwd`/exp/mfcc
 vaddir=`pwd`/exp/mfcc
+data_dir=/export/fs05/ywang793/malawi_data
 
 stage=1
 config_file=default_config.sh
@@ -46,7 +55,7 @@ fi
 
 #Train datasets
 if [ $stage -le 2 ];then 
-    for name in voxceleb1cat_train voxceleb2cat 
+    for name in $data_dir/wav.scp
     do
 	num_spk=$(wc -l data/$name/spk2utt | awk '{ print $1}')
 	nj=$(($num_spk < 40 ? $num_spk:40))
