@@ -43,5 +43,6 @@ if [ $stage -le 2 ];then
     # prepare Dihard2019
 #    local/make_dihard2019.sh $dihard2019_dev data/dihard2019_dev
 #    local/make_dihard2019.sh $dihard2019_eval data/dihard2019_eval
+    chmod +x local/make_malawi.sh
     local/make_malawi.sh
 fi
