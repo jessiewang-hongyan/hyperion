@@ -12,6 +12,12 @@
 #dihard_dir=$1/data/single_channel
 #data_dir=$2
 
+#$ -N malawi_prepare
+#$ -j y -o /export/c12/ywang793/logs/log.malawi_prepare
+#$ -wd /export/fs05/ywang793/hyperion/egs/malawi/v1
+# Submit to GPU
+#$ -q g.q
+
 malawi_dir=/export/fs05/leibny/CCWD-Fe62023/langdev
 data_dir=/export/fs05/ywang793/malawi_data
 
