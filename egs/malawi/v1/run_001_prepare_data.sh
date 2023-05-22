@@ -39,10 +39,46 @@ config_file=default_config.sh
 #    utils/combine_data.sh data/voxcelebcat data/voxceleb1cat data/voxceleb2cat_train
 #fi
 
-if [ $stage -le 2 ];then
-    # prepare Dihard2019
-#    local/make_dihard2019.sh $dihard2019_dev data/dihard2019_dev
-#    local/make_dihard2019.sh $dihard2019_eval data/dihard2019_eval
-    chmod +x local/make_malawi.sh
-    local/make_malawi.sh
-fi
+#if [ $stage -le 2 ];then
+#    # prepare Dihard2019
+##    local/make_dihard2019.sh $dihard2019_dev data/dihard2019_dev
+##    local/make_dihard2019.sh $dihard2019_eval data/dihard2019_eval
+#    chmod +x local/make_malawi.sh
+#    local/make_malawi.sh
+#fi
+malawi_dir=/export/fs05/leibny/CCWD-Fe62023/langdev
+data_dir=/export/fs05/ywang793/malawi_data
+
+echo "making data dir $data_dir"
+
+mkdir -p $data_dir
+
+find $malawi_dir -name "*.mp3" | \
+    awk '
+{ bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
+  print bn, "ffmpeg -i "$1" "$1".wav - |" }' | sort -k1,1 > $data_dir/wav.scp
+
+awk '{ print $1,$1}' $data_dir/wav.scp  > $data_dir/utt2spk
+cat $data_dir/utt2spk > $data_dir/spk2utt
+
+for f in $(find $malawi_dir -name "*.lab" | sort)
+do
+    awk '{ bn=FILENAME; sub(/.*\//,"",bn); sub(/\.lab$/,"",bn);
+           printf "%s-%010d-%010d %s %f %f\n", bn, $1*1000, $2*1000, bn, $1, $2}' $f
+done > $data_dir/vad.segments
+
+
+rm -f $data_dir/reco2num_spks
+for f in $(find $malawi_dir -name "*.rttm" | sort)
+do
+    cat $f
+    awk '{ print $2, $8}' $f | sort -u | awk '{ f=$1; count++}END{ print f, count}' >> $data_dir/reco2num_spks
+
+done > $data_dir/diarization.rttm
+
+for f in $(find $malawi_dir -name "*.uem" | sort)
+do
+    cat $f
+done > $data_dir/diarization.uem
+
+utils/validate_data_dir.sh --no-feats --no-text $data_dir
