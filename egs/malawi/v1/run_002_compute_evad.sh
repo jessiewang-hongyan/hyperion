@@ -6,7 +6,7 @@
 #                2017   Johns Hopkins University (Author: Daniel Povey)
 # Apache 2.0.
 #
-#$ -N malawi_prepare
+#$ -N malawi_vad
 #$ -j y -o /export/c12/ywang793/logs/log.malawi_vad
 #$ -M ywang793@jh.edu
 #$ -m e
