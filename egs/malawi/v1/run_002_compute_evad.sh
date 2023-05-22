@@ -31,28 +31,28 @@ config_file=default_config.sh
 
   # Make filterbanks and compute the energy-based VAD for each dataset
 
-if [ $stage -le 1 ]; then
-    # Prepare to distribute data over multiple machines
-    if [[ $(hostname -f) == *.clsp.jhu.edu ]] && [ ! -d $mfccdir/storage ]; then
-	dir_name=$USER/hyp-data/voxceleb/v1/$storage_name/mfcc/storage
-	if [ "$nodes" == "b0" ];then
-	    utils/create_split_dir.pl \
-			    utils/create_split_dir.pl \
-		/export/b{04,05,06,07}/$dir_name $mfccdir/storage
-	elif [ "$nodes" == "b1" ];then
-	    utils/create_split_dir.pl \
-		/export/b{14,15,16,17}/$dir_name $mfccdir/storage
-	elif [ "$nodes" == "c0" ];then
-	    utils/create_split_dir.pl \
-		/export/c{06,07,08,09}/$dir_name $mfccdir/storage
-	elif [ "$nodes" == "fs01" ];then
-	    utils/create_split_dir.pl \
-		/export/fs01/$dir_name $mfccdir/storage
-	else
-	    echo "we don't distribute data between multiple machines"
-	fi
-    fi
-fi
+#if [ $stage -le 1 ]; then
+#    # Prepare to distribute data over multiple machines
+#    if [[ $(hostname -f) == *.clsp.jhu.edu ]] && [ ! -d $mfccdir/storage ]; then
+#	dir_name=$USER/hyp-data/voxceleb/v1/$storage_name/mfcc/storage
+#	if [ "$nodes" == "b0" ];then
+#	    utils/create_split_dir.pl \
+#			    utils/create_split_dir.pl \
+#		/export/b{04,05,06,07}/$dir_name $mfccdir/storage
+#	elif [ "$nodes" == "b1" ];then
+#	    utils/create_split_dir.pl \
+#		/export/b{14,15,16,17}/$dir_name $mfccdir/storage
+#	elif [ "$nodes" == "c0" ];then
+#	    utils/create_split_dir.pl \
+#		/export/c{06,07,08,09}/$dir_name $mfccdir/storage
+#	elif [ "$nodes" == "fs01" ];then
+#	    utils/create_split_dir.pl \
+#		/export/fs01/$dir_name $mfccdir/storage
+#	else
+#	    echo "we don't distribute data between multiple machines"
+#	fi
+#    fi
+#fi
 
 #Train datasets
 if [ $stage -le 2 ];then 
