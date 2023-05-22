@@ -81,4 +81,4 @@ do
     cat $f
 done > $data_dir/diarization.uem
 
-utils/validate_data_dir.sh --no-feats --no-text $data_dir
+HYP_ROOT/hyp_utils/kaldi/utils/utils/validate_data_dir.sh --no-feats --no-text $data_dir
