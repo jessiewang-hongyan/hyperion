@@ -72,7 +72,7 @@ do
     one=$(( $RANDOM % 10 ))
     two=$(( $RANDOM % 10 ))
     awk '{ bn=FILENAME; sub(/.*\//,"",bn); sub(/\.lab$/,"",bn);
-           printf "%s-%010d-%010d %s %f %f\n", bn, one*1000, two*1000, bn, one, two}' $f
+           printf "%s-%010d-%010d %s %f %f\n", bn, $one*1000, $two*1000, bn, $one, $two}' $f
 done > $data_dir/vad.segments
 
 rm -f $data_dir/reco2num_spks
