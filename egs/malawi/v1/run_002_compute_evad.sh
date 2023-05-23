@@ -59,8 +59,8 @@ if [ $stage -le 2 ];then
     for name in $data_dir/wav.scp
     do
 	num_spk=$(wc -l data/$name/spk2utt | awk '{ print $1}')
-#	nj=$(($num_spk < 40 ? $num_spk:40))
-  [ $num_spk -lt 40 ] && nj=$num_spk || nj=40
+	nj=$(($num_spk < 40 ? $num_spk:40))
+#  [ $num_spk -lt 40 ] && nj=$num_spk || nj=40
 	steps/make_mfcc.sh --write-utt2num-frames true \
 	    --mfcc-config conf/mfcc2_16k.conf --nj $nj --cmd "$train_cmd" \
 	    data/${name} exp/make_mfcc/$name $mfccdir

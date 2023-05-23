@@ -61,12 +61,19 @@ find $malawi_dir -name "*.mp3" | \
 awk '{ print $1,$1}' $data_dir/wav.scp  > $data_dir/utt2spk
 cat $data_dir/utt2spk > $data_dir/spk2utt
 
-for f in $(find $malawi_dir -name "*.lab" | sort)
-do
-    awk '{ bn=FILENAME; sub(/.*\//,"",bn); sub(/\.lab$/,"",bn);
-           printf "%s-%010d-%010d %s %f %f\n", bn, $1*1000, $2*1000, bn, $1, $2}' $f
-done > $data_dir/vad.segments
+#for f in $(find $malawi_dir -name "*.lab" | sort)
+#do
+#    awk '{ bn=FILENAME; sub(/.*\//,"",bn); sub(/\.lab$/,"",bn);
+#           printf "%s-%010d-%010d %s %f %f\n", bn, $1*1000, $2*1000, bn, $1, $2}' $f
+#done > $data_dir/vad.segments
 
+for f in $(find $malawi_dir -name "*.mp3" | sort)
+do
+    one=$(( $RANDOM % 10 ))
+    two=$(( $RANDOM % 10 ))
+    awk '{ bn=FILENAME; sub(/.*\//,"",bn); sub(/\.lab$/,"",bn);
+           printf "%s-%010d-%010d %s %f %f\n", bn, one*1000, two*1000, bn, one, two}' $f
+done > $data_dir/vad.segments
 
 rm -f $data_dir/reco2num_spks
 for f in $(find $malawi_dir -name "*.rttm" | sort)
@@ -81,4 +88,4 @@ do
     cat $f
 done > $data_dir/diarization.uem
 
-#HYP_ROOT/hyp_utils/kaldi/utils/validate_data_dir.sh --no-feats --no-text $data_dir
+utils/validate_data_dir.sh --no-feats --no-text $data_dir
