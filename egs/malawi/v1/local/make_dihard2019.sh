@@ -16,20 +16,36 @@ echo "making data dir $data_dir"
 
 mkdir -p $data_dir
 
-find $dihard_dir -name "*.flac" | \
+# find $dihard_dir -name "*.flac" | \
+#     awk '
+# { bn=$1; sub(/.*\//,"",bn); sub(/\.flac$/,"",bn); 
+#   print bn, "sox "$1" -t wav -b 16 -e signed-integer - |" }' | sort -k1,1 > $data_dir/wav.scp
+
+# awk '{ print $1,$1}' $data_dir/wav.scp  > $data_dir/utt2spk
+# cat $data_dir/utt2spk > $data_dir/spk2utt
+
+# for f in $(find $dihard_dir -name "*.lab" | sort)
+# do
+#     awk '{ bn=FILENAME; sub(/.*\//,"",bn); sub(/\.lab$/,"",bn); 
+#            printf "%s-%010d-%010d %s %f %f\n", bn, $1*1000, $2*1000, bn, $1, $2}' $f
+# done > $data_dir/vad.segments
+
+
+find $malawi_dir -name "*.mp3" | \
     awk '
-{ bn=$1; sub(/.*\//,"",bn); sub(/\.flac$/,"",bn); 
-  print bn, "sox "$1" -t wav -b 16 -e signed-integer - |" }' | sort -k1,1 > $data_dir/wav.scp
+{ bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
+  print bn, "ffmpeg -i "$1" "$1".wav - |" }' | sort -k1,1 > $data_dir/wav.scp
 
 awk '{ print $1,$1}' $data_dir/wav.scp  > $data_dir/utt2spk
 cat $data_dir/utt2spk > $data_dir/spk2utt
 
 for f in $(find $dihard_dir -name "*.lab" | sort)
 do
-    awk '{ bn=FILENAME; sub(/.*\//,"",bn); sub(/\.lab$/,"",bn); 
-           printf "%s-%010d-%010d %s %f %f\n", bn, $1*1000, $2*1000, bn, $1, $2}' $f
+    one=$(( $RANDOM % 10 ))
+    two=$(( $RANDOM % 10 ))
+    awk '{ bn=FILENAME; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
+           printf "%s-%010d-%010d %s %f %f\n", bn, $one*1000, $two*1000, bn, $one, $two}' $f
 done > $data_dir/vad.segments
-
 
 rm -f $data_dir/reco2num_spks
 for f in $(find $dihard_dir -name "*.rttm" | sort)
