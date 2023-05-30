@@ -36,7 +36,8 @@ find $dihard_dir -name "*.mp3" | \
 { bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
   print bn, "ffmpeg -i "$1" "$1".wav - |" }' | sort -k1,1 > $data_dir/wav.scp
 
-awk '{ print $1,$1}' $data_dir/wav.scp  > $data_dir/utt2spk
+awk '{split(bn, parts, "-"); spk=parts[1] parts[2]; utt=parts[3];
+      print spk,utt}' $data_dir/wav.scp  > $data_dir/utt2spk
 cat $data_dir/utt2spk > $data_dir/spk2utt
 
 for f in $(find $dihard_dir -name "*.mp3" | sort)
