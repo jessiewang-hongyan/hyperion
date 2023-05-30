@@ -37,3 +37,4 @@ config_file=default_config.sh
 #     local/make_dihard2019.sh $dihard2019_eval data/dihard2019_eval
 # fi
 # local/make_dihard2019.sh  [where data in] [information/output of data]
+local/make_dihard2019.sh
