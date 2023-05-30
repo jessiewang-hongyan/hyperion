@@ -36,13 +36,14 @@ find $dihard_dir -name "*.mp3" | \
 { bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
   print bn, "ffmpeg -i "$1" "$1".wav - |" }' | sort -k1,1 > $data_dir/wav.scp
 
-awk '{split(bn, parts, "-"); spk=parts[1] parts[2]; utt=parts[3];
+awk '{bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
+      split(bn, parts, "-"); spk=parts[1] parts[2]; utt=parts[3];
       print spk,utt}' $data_dir/wav.scp  > $data_dir/utt2spk
 cat $data_dir/utt2spk > $data_dir/spk2utt
 
 for f in $(find $dihard_dir -name "*.mp3" | sort)
 do
-    awk '{ bn=FILENAME; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
+    awk '{ bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
           split(bn, parts, "-"); spk=parts[1] parts[2]; utt=parts[3];
           printf "%s-%010d-%010d %s %f %f\n", bn, spk*1000, utt*1000, bn, spk, utt}' $f
 done > $data_dir/vad.segments
@@ -60,5 +61,5 @@ do
     cat $f
 done > $data_dir/diarization.uem
 
-utils/validate_data_dir.sh --no-feats --no-text $data_dir
+../utils/validate_data_dir.sh --no-feats --no-text $data_dir
     
