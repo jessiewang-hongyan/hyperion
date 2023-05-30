@@ -4,13 +4,13 @@
 #
 # Creates the DIHARD 2019 data directories.
 
-if [ $# != 2 ]; then
-  echo "Usage: $0 <dihard-dir> <data-dir>"
-  echo " e.g.: $0 /export/corpora/LDC/LDC2019E31 data/dihard2019_dev"
-fi
+# if [ $# != 2 ]; then
+#   echo "Usage: $0 <dihard-dir> <data-dir>"
+#   echo " e.g.: $0 /export/corpora/LDC/LDC2019E31 data/dihard2019_dev"
+# fi
 
-dihard_dir=$1/data/single_channel
-data_dir=$2
+dihard_dir=/export/fs05/leibny/CCWD-Fe62023/langdev
+data_dir=/export/fs05/ywang793/hyperion/egs/malawi/v1/data
 
 echo "making data dir $data_dir"
 
@@ -31,7 +31,7 @@ mkdir -p $data_dir
 # done > $data_dir/vad.segments
 
 
-find $malawi_dir -name "*.mp3" | \
+find $dihard_dir -name "*.mp3" | \
     awk '
 { bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
   print bn, "ffmpeg -i "$1" "$1".wav - |" }' | sort -k1,1 > $data_dir/wav.scp
@@ -39,12 +39,11 @@ find $malawi_dir -name "*.mp3" | \
 awk '{ print $1,$1}' $data_dir/wav.scp  > $data_dir/utt2spk
 cat $data_dir/utt2spk > $data_dir/spk2utt
 
-for f in $(find $dihard_dir -name "*.lab" | sort)
+for f in $(find $dihard_dir -name "*.mp3" | sort)
 do
-    one=$(( $RANDOM % 10 ))
-    two=$(( $RANDOM % 10 ))
     awk '{ bn=FILENAME; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
-           printf "%s-%010d-%010d %s %f %f\n", bn, $one*1000, $two*1000, bn, $one, $two}' $f
+          split(bn, parts, "-"); spk=parts[1] parts[2]; utt=parts[3];
+          printf "%s-%010d-%010d %s %f %f\n", bn, spk*1000, utt*1000, bn, spk, utt}' $f
 done > $data_dir/vad.segments
 
 rm -f $data_dir/reco2num_spks
