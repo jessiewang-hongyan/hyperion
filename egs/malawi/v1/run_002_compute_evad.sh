@@ -6,6 +6,15 @@
 #                2017   Johns Hopkins University (Author: Daniel Povey)
 # Apache 2.0.
 #
+#$ -N malawi_vad
+#$ -j y -o /export/c12/ywang793/logs/log.malawi_vad
+#$ -M ywang793@jh.edu
+#$ -m e
+#$ -l ram_free=20G,mem_free=20G,gpu=1,hostname=c0*|c1[0123456789]
+#$ -wd /export/fs05/ywang793/hyperion/egs/malawi/v1
+# Submit to GPU
+#$ -q g.q
+
 . ./cmd.sh
 . ./path.sh
 set -e
@@ -45,19 +54,32 @@ if [ $stage -le 1 ]; then
 fi
 
 #Train datasets
+# if [ $stage -le 2 ];then 
+#     for name in voxceleb1cat_train voxceleb2cat 
+#     do
+# 	num_spk=$(wc -l data/$name/spk2utt | awk '{ print $1}')
+# 	nj=$(($num_spk < 40 ? $num_spk:40))
+# 	steps/make_mfcc.sh --write-utt2num-frames true \
+# 	    --mfcc-config conf/mfcc2_16k.conf --nj $nj --cmd "$train_cmd" \
+# 	    data/${name} exp/make_mfcc/$name $mfccdir
+# 	utils/fix_data_dir.sh data/${name}
+# 	hyp_utils/kaldi/vad/compute_vad_decision.sh --nj $nj --cmd "$train_cmd" \
+# 	    data/${name} exp/make_vad/$name $vaddir
+# 	utils/fix_data_dir.sh data/${name}
+#     done
+
+# fi
 if [ $stage -le 2 ];then 
-    for name in voxceleb1cat_train voxceleb2cat 
-    do
-	num_spk=$(wc -l data/$name/spk2utt | awk '{ print $1}')
+   
+	num_spk=$(wc -l data/spk2utt | awk '{ print $1}')
 	nj=$(($num_spk < 40 ? $num_spk:40))
 	steps/make_mfcc.sh --write-utt2num-frames true \
 	    --mfcc-config conf/mfcc2_16k.conf --nj $nj --cmd "$train_cmd" \
-	    data/${name} exp/make_mfcc/$name $mfccdir
-	utils/fix_data_dir.sh data/${name}
+	    data/ exp/make_mfcc/ $mfccdir
+	utils/fix_data_dir.sh data
 	hyp_utils/kaldi/vad/compute_vad_decision.sh --nj $nj --cmd "$train_cmd" \
-	    data/${name} exp/make_vad/$name $vaddir
-	utils/fix_data_dir.sh data/${name}
-    done
+	    data exp/make_vad/ $vaddir
+	utils/fix_data_dir.sh data
 
 fi
 
