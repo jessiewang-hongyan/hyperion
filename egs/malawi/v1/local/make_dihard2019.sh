@@ -34,7 +34,8 @@ mkdir -p $data_dir
 find $dihard_dir -name "101230_1_rec1.mp3" | \
     awk '
 { bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
-  print bn, "ffmpeg -i "$1" "$1".wav - |" }' | sort -k1,1 > $data_dir/wav.scp
+  split(bn, parts, "_");
+  print bn, "ffmpeg -i "$parts[1]" "$1".wav - |" }' | sort -k1,1 > $data_dir/wav.scp
 
 awk '{bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
       split(bn, parts, "_");
