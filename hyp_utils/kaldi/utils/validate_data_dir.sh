@@ -104,7 +104,8 @@ fi
 check_sorted_and_uniq $data/spk2utt
 
 ! cmp -s <(cat $data/utt2spk | awk '{print $1, $2;}') \
-     <(${kaldi_utils}/spk2utt_to_utt2spk.pl $data/spk2utt)  && \
+    #  <(${kaldi_utils}/spk2utt_to_utt2spk.pl $data/spk2utt)  && \
+     <(utils/spk2utt_to_utt2spk.pl $data/spk2utt)  && \
    echo "$0: spk2utt and utt2spk do not seem to match" && exit 1;
 
 cat $data/utt2spk | awk '{print $1;}' > $tmpdir/utts
