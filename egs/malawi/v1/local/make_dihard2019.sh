@@ -31,20 +31,20 @@ mkdir -p $data_dir
 # done > $data_dir/vad.segments
 
 
-find $dihard_dir -name "*.mp3" | \
+find $dihard_dir -name "101230_1_rec1.mp3" | \
     awk '
 { bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
   print bn, "ffmpeg -i "$1" "$1".wav - |" }' | sort -k1,1 > $data_dir/wav.scp
 
 awk '{bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
-      split(bn, parts, "-");
-      printf "%s-%s %s" parts[1], parts[2], parts[3]}' $data_dir/wav.scp  > $data_dir/utt2spk
+      split(bn, parts, "_");
+      printf "%s-%s %s\n" parts[1], parts[2], parts[3]}' $data_dir/wav.scp  > $data_dir/utt2spk
 cat $data_dir/utt2spk > $data_dir/spk2utt
 
-for f in $(find $dihard_dir -name "*.mp3" | sort)
+for f in $(find $dihard_dir -name "101230_1_rec1.mp3" | sort)
 do
     awk '{ bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
-          split(bn, parts, "-"); spk=parts[1] parts[2]; utt=parts[3];
+          split(bn, parts, "_"); spk=parts[1] parts[2]; utt=parts[3];
           printf "%s-%010d-%010d %s %f %f\n", bn, spk*1000, utt*1000, bn, spk, utt}' $f
 done > $data_dir/vad.segments
 
