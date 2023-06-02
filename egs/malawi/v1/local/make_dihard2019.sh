@@ -31,7 +31,7 @@ mkdir -p $data_dir
 # done > $data_dir/vad.segments
 
 
-find $dihard_dir -name "101230_1_rec1.mp3" | \
+find $dihard_dir -name "*.mp3" | \
     awk '
 { bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
   split(bn, parts, "_");
@@ -42,7 +42,7 @@ awk '{bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
       printf "%s_%s %s\n", parts[1], parts[2], parts[3]}' $data_dir/wav.scp  > $data_dir/utt2spk
 cat $data_dir/utt2spk > $data_dir/spk2utt
 
-for f in $(find $dihard_dir -name "101230_1_rec1.mp3" | sort)
+for f in $(find $dihard_dir -name "*.mp3" | sort)
 do
     awk '{ bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
           split(bn, parts, "_"); spk=parts[1] parts[2]; utt=parts[3];
