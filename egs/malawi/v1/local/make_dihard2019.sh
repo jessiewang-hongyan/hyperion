@@ -38,7 +38,7 @@ find $dihard_dir -name "101230_1_rec1.mp3" | \
 
 awk '{bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
       split(bn, parts, "_");
-      printf "%s-%s %s\n" parts[0], parts[1], parts[2]}' $data_dir/wav.scp  > $data_dir/utt2spk
+      printf "%s-%s %s\n", parts[0], parts[1], parts[2]}' $data_dir/wav.scp  > $data_dir/utt2spk
 cat $data_dir/utt2spk > $data_dir/spk2utt
 
 for f in $(find $dihard_dir -name "101230_1_rec1.mp3" | sort)
