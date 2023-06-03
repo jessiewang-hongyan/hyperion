@@ -35,7 +35,7 @@ find $dihard_dir -name "*.mp3" | \
     awk '
 { bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
   split(bn, parts, "_");
-  printf "ffmpeg -i %s %s.wav - |", $1, $1 }' | sort -k1,1 > $data_dir/wav.scp
+  print "ffmpeg -i "$1" "$1".wav - |" }' | sort -k1,1 > $data_dir/wav.scp
 
 awk '{bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
       split(bn, parts, "_");
