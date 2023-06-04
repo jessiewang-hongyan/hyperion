@@ -15,7 +15,7 @@ data_dir=/export/fs05/ywang793/hyperion/egs/malawi/v1/data
 echo "making data dir $data_dir"
 
 mkdir -p $data_dir
-# mkdir -p `pwd -P`/data
+mkdir -p $data_dir/wav
 
 # find $dihard_dir -name "*.flac" | \
 #     awk '
@@ -36,7 +36,7 @@ find $dihard_dir -name "101230_1_rec1.mp3" | \
     awk '
 { bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
   split(bn, parts, "_");
-  print bn, "ffmpeg -i "$1" "${data_dir}"/wav/"bn".wav - |" }' | sort -k1,1 > $data_dir/wav.scp
+  print bn, "ffmpeg -i "$1" "$data_dir"/wav/"bn".wav - |" }' | sort -k1,1 > $data_dir/wav.scp
 
 awk '{bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
       split(bn, parts, "_");
