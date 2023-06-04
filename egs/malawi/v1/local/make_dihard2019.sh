@@ -36,7 +36,7 @@ find $dihard_dir -name "101230_1_rec1.mp3" | \
     awk '
 { bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
   split(bn, parts, "_");
-  print bn, "ffmpeg -i "$1" -f wav /export/fs05/ywang793/hyperion/egs/malawi/v1/data/wav/"bn".wav - |" }' | sort -k1,1 > $data_dir/wav.scp
+  print bn, "ffmpeg -i "$1" -f mp3 /export/fs05/ywang793/hyperion/egs/malawi/v1/data/wav/"bn".wav - |" }' | sort -k1,1 > $data_dir/wav.scp
 
 awk '{bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
       split(bn, parts, "_");
