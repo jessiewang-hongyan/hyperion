@@ -47,12 +47,11 @@ if [[ -n "$file" ]]; then
     # Display a message with the filename
     echo "filename: $file_name"
 
-    awk '
-{ print $file_name, " "$output_file".wav" }' | sort -k1,1 > $data_dir/wav.scp
+    awk '{ print $file_name, " "$output_file".wav" }' | sort -k1,1 > $data_dir/wav.scp
 fi
 
 
-find $dihard_dir -name "101230_1_rec1.mp3" -printf "%f\n" | \
+find $dihard_dir -name "101230_1_rec1.mp3" | \
 awk '{bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
       split(bn, parts, "_");
       printf "%s %s\n", bn, parts[3]}' $data_dir/wav.scp  > $data_dir/utt2spk
