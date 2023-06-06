@@ -33,7 +33,7 @@ mkdir -p $data_dir/wav
 
 extension=".mp3"
 find $dihard_dir -name "101230_1_rec1.mp3" -printf "%f\n" | \
-    ffmpeg -i $1 -f wav $data_dir/wav/$1.wav | \
+    ffmpeg -i $dihard_dir/$1 -f wav $data_dir/wav/$1.wav | \
     echo "filename:  $1" | \
     awk '
 { bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
