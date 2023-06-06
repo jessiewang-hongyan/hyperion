@@ -31,13 +31,13 @@ mkdir -p $data_dir/wav
 #            printf "%s-%010d-%010d %s %f %f\n", bn, $1*1000, $2*1000, bn, $1, $2}' $f
 # done > $data_dir/vad.segments
 
-
+extension=".mp3"
 find $dihard_dir -name "101230_1_rec1.mp3" | \
+    ffmpeg -i "$1" -f wav "$data_dir"/wav/101230_1_rec1.wav | \
     awk '
 { bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
   split(bn, parts, "_");
-  ffmpeg -i $1 -f wav $data_dir/wav/bn.wav
-  print bn, "$data_dir"/wav/"bn".wav |" }' | sort -k1,1 > $data_dir/wav.scp
+  print bn, "ffmpeg -i "$1" -f wav /export/fs05/ywang793/hyperion/egs/malawi/v1/data/wav/"bn".wav - |" }' | sort -k1,1 > $data_dir/wav.scp
 
 awk '{bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
       split(bn, parts, "_");
