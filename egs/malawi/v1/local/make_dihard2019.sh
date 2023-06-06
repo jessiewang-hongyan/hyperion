@@ -48,14 +48,21 @@ if [[ -n "$file" ]]; then
     echo "filename: $file_name"
 
     awk '{ print $file_name, " "$output_file".wav" }' | sort -k1,1 > $data_dir/wav.scp
+
+    awk '{bn=$file_name; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
+      split(bn, parts, "_");
+      printf "%s %s\n", bn, parts[3]}' $data_dir/wav.scp  > $data_dir/utt2spk
+    cat $data_dir/utt2spk > $data_dir/spk2utt
+
+
 fi
 
 
-find $dihard_dir -name "101230_1_rec1.mp3" | \
-awk '{bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
-      split(bn, parts, "_");
-      printf "%s %s\n", bn, parts[3]}' $data_dir/wav.scp  > $data_dir/utt2spk
-cat $data_dir/utt2spk > $data_dir/spk2utt
+# find $dihard_dir -name "101230_1_rec1.mp3" | \
+# awk '{bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
+#       split(bn, parts, "_");
+#       printf "%s %s\n", bn, parts[3]}' $data_dir/wav.scp  > $data_dir/utt2spk
+# cat $data_dir/utt2spk > $data_dir/spk2utt
 
 for f in $(find $dihard_dir -name "101230_1_rec1.mp3" | sort)
 do
