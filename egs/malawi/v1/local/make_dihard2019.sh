@@ -32,8 +32,8 @@ mkdir -p $data_dir/wav
 # done > $data_dir/vad.segments
 
 extension=".mp3"
-find $dihard_dir -name "101230_1_rec1.mp3" | \
-    ffmpeg -i "$1" -f wav "$data_dir"/wav/101230_1_rec1.wav | \
+find $dihard_dir -name "101230_1_rec1.mp3" -printf "%f\n" | \
+    ffmpeg -i $1 -f wav $data_dir/wav/$1.wav | \
     awk '
 { bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
   split(bn, parts, "_");
