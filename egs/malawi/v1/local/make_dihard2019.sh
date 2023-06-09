@@ -47,8 +47,19 @@ do
 
     # Display a message with the filename
     echo "filename: $file_name"
+done
 
+for f in $files
+do
+    # Extract the base name of the file
+    base_name=$(basename "$f")
+    # Remove the extension from the base name
+    file_name="${base_name%.*}"
+    # Construct the output file path with the desired format
+    output_file="$data_dir/wav/$file_name.wav"
+   
     awk '{ print $file_name, " "$output_file".wav" }' | sort -k1,1 > $data_dir/wav.scp
+    
     awk '{ print $f,$f}' $data_dir/wav.scp  > $data_dir/utt2spk
     cat $data_dir/utt2spk > $data_dir/spk2utt
 
