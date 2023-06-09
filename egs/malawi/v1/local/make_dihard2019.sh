@@ -31,6 +31,17 @@ mkdir -p $data_dir/wav
 #            printf "%s-%010d-%010d %s %f %f\n", bn, $1*1000, $2*1000, bn, $1, $2}' $f
 # done > $data_dir/vad.segments
 
+find $dihard_dir -name "101230_1_rec1.mp3" | \
+ awk '
+{ bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
+  split(bn, parts, "_");
+  print bn, "/wav/"bn".wav - |" }' | sort -k1,1 > $data_dir/wav.scp
+awk '{bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
+      split(bn, parts, "_");
+      printf "%s %s\n", bn, parts[3]}' $data_dir/wav.scp  > $data_dir/utt2spk
+cat $data_dir/utt2spk > $data_dir/spk2utt
+
+
 filename="101230_1_rec1.mp3"
 files=$(find "$dihard_dir" -name "$filename")
 
@@ -47,22 +58,6 @@ do
 
     # Display a message with the filename
     echo "filename: $file_name"
-done
-
-for f in $files
-do
-    # Extract the base name of the file
-    base_name=$(basename "$f")
-    # Remove the extension from the base name
-    file_name="${base_name%.*}"
-    # Construct the output file path with the desired format
-    output_file="$data_dir/wav/$file_name.wav"
-   
-    awk '{ print $file_name, " "$output_file".wav" }' | sort -k1,1 > $data_dir/wav.scp
-    
-    awk '{ print $f,$f}' $data_dir/wav.scp  > $data_dir/utt2spk
-    cat $data_dir/utt2spk > $data_dir/spk2utt
-
 done
 
 
