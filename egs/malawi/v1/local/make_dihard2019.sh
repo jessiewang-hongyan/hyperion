@@ -30,13 +30,14 @@ mkdir -p $data_dir/wav
 #     awk '{ bn=FILENAME; sub(/.*\//,"",bn); sub(/\.lab$/,"",bn); 
 #            printf "%s-%010d-%010d %s %f %f\n", bn, $1*1000, $2*1000, bn, $1, $2}' $f
 # done > $data_dir/vad.segments
-extension=".mp3"
-filename="101230_1_rec1.mp3"
-file=$(find "$dihard_dir" -name "$filename")
 
-if [[ -n "$file" ]]; then
+filename="101230_1_rec1.mp3"
+files=$(find "$dihard_dir" -name "$filename")
+
+for f in $files
+do
     # Extract the base name of the file
-    base_name=$(basename "$file")
+    base_name=$(basename "$f")
     # Remove the extension from the base name
     file_name="${base_name%.*}"
     # Construct the output file path with the desired format
@@ -48,7 +49,10 @@ if [[ -n "$file" ]]; then
     echo "filename: $file_name"
 
     awk '{ print $file_name, " "$output_file".wav" }' | sort -k1,1 > $data_dir/wav.scp
-fi
+    awk '{ print $f,$f}' $data_dir/wav.scp  > $data_dir/utt2spk
+    cat $data_dir/utt2spk > $data_dir/spk2utt
+
+done
 
 
 find $dihard_dir -name "101230_1_rec1.mp3" | \
