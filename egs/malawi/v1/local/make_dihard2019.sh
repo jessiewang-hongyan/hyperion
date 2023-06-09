@@ -43,7 +43,7 @@ do
     # Construct the output file path with the desired format
     output_file="$data_dir/wav/$file_name.wav"
     # Convert the file using FFmpeg
-    ffmpeg -i "$file" -f wav "$output_file"
+    ffmpeg -i "$f" -f wav "$output_file"
 
     # Display a message with the filename
     echo "filename: $file_name"
