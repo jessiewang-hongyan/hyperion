@@ -45,7 +45,7 @@ awk '{bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
 cat $data_dir/utt2spk > $data_dir/spk2utt
 
 
-filename="101230_1_rec1.mp3"
+filename="*.mp3"
 files=$(find "$dihard_dir" -name "$filename")
 
 for f in $files
@@ -64,13 +64,13 @@ do
 done
 
 
-find $dihard_dir -name "101230_1_rec1.mp3" | \
+find $dihard_dir -name "*.mp3" | \
 awk '{bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
       split(bn, parts, "_");
       printf "%s %s\n", bn, parts[3]}' $data_dir/wav.scp  > $data_dir/utt2spk
 cat $data_dir/utt2spk > $data_dir/spk2utt
 
-for f in $(find $dihard_dir -name "101230_1_rec1.mp3" | sort)
+for f in $(find $dihard_dir -name "*.mp3" | sort)
 do
     awk '{ bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
           split(bn, parts, "_"); spk=parts[1] parts[2]; utt=parts[3];
