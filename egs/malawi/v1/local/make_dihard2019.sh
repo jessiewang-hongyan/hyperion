@@ -34,7 +34,7 @@ mkdir -p $data_dir/wav
 #            printf "%s-%010d-%010d %s %f %f\n", bn, $1*1000, $2*1000, bn, $1, $2}' $f
 # done > $data_dir/vad.segments
 
-find $dihard_dir -name "101230_1_rec1.mp3" | \
+find $dihard_dir -name "*.mp3" | \
  awk '
 { bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
   split(bn, parts, "_");
