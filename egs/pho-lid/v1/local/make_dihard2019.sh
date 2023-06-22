@@ -16,9 +16,9 @@ echo "making data dir $data_dir"
 
 mkdir -p $data_dir
 
-find $dihard_dir -name "*.flac" | \
+find $dihard_dir -name "*.wav" | \
     awk '
-{ bn=$1; sub(/.*\//,"",bn); sub(/\.flac$/,"",bn); 
+{ bn=$1; sub(/.*\//,"",bn); sub(/\.wav$/,"",bn); 
   print bn, "sox "$1" -t wav -b 16 -e signed-integer - |" }' | sort -k1,1 > $data_dir/wav.scp
 
 awk '{ print $1,$1}' $data_dir/wav.scp  > $data_dir/utt2spk
