@@ -9,52 +9,42 @@
 #   echo " e.g.: $0 /export/corpora/LDC/LDC2019E31 data/dihard2019_dev"
 # fi
 
-audio_dir=/export/fs05/ywang793/merlion_data/MERLIon-CCS-Challenge_Development-Set_v001/_CONFIDENTIAL/_audio
+data_root_dir=/export/fs05/ywang793/merlion_data/MERLIon-CCS-Challenge_Development-Set_v001/_CONFIDENTIAL
+processed_data_dir=/export/fs05/ywang793/hyperion/egs/pholid/v1/data
 
-data_dir=/export/fs05/ywang793/hyperion/egs/pholid/v1/data
+echo "making data dir $processed_data_dir"
 
-echo "making data dir $data_dir"
-
-mkdir -p $data_dir
-mkdir -p $data_dir/wav
+mkdir -p $processed_data_dir
+mkdir -p $processed_data_dir/wav
 
 file_name=TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav
 
-find $audio_dir -name $file_name | \
+find $data_root_dir/_audio -name $file_name | \
  awk '
 { bn=$1; sub(/.*\//,"",bn); sub(/\.wav$/,"",bn);
-  split(bn, parts, "_");
-  print bn, "/export/fs05/ywang793/hyperion/egs/pholid/v1/data/wav/"bn".wav" }' | sort -k1,1 > $data_dir/wav.scp
-awk '{bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
-      split(bn, parts, "_");
-      printf "%s %s\n", bn, parts[3]}' $data_dir/wav.scp  > $data_dir/utt2spk
+    split(bn, parts, "_");
+  print parts[2], $processed_data_dir"/wav/"parts[2]"_"parts[5]".wav" }' | sort -k1,1 > $data_dir/wav.scp
+awk '{ print $1,$1}' $data_dir/wav.scp  > $data_dir/utt2spk
 cat $data_dir/utt2spk > $data_dir/spk2utt
 
 
-filename="*.mp3"
-files=$(find "$dihard_dir" -name "$filename")
+files=$(find $data_root_dir/_audio -name $filename)
 
 for f in $files
 do
     # Extract the base name of the file
     base_name=$(basename "$f")
     # Remove the extension from the base name
-    file_name="${base_name%.*}"
+    file_name=$(echo "${base_name%.*}" | cut -d '_' -f 2,5)
+    
     # Construct the output file path with the desired format
-    output_file="$data_dir/wav/$file_name.wav"
+    output_file="$processed_data_dir/wav/$file_name.wav"
     # Convert the file using FFmpeg
     ffmpeg -i "$f"  -ar 16000 -ac 1 -f wav "$output_file"
 
     # Display a message with the filename
     echo "filename: $file_name"
 done
-
-
-find $dihard_dir -name "*.mp3" | \
-awk '{bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
-      split(bn, parts, "_");
-      printf "%s %s\n", bn, parts[3]}' $data_dir/wav.scp  > $data_dir/utt2spk
-cat $data_dir/utt2spk > $data_dir/spk2utt
 
 for f in $(find $dihard_dir -name "*.mp3" | sort)
 do

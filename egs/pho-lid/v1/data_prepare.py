@@ -1,10 +1,12 @@
 import numpy as np
+import pandas as pd
 import torch
 import torchaudio
 from transformers import Wav2Vec2Processor, Wav2Vec2FeatureExtractor, Wav2Vec2Model
 
 class xlsr_reader(object):
     def __init__(self, save_path):
+        super.__init__(self)
         self.model = Wav2Vec2Model.from_pretrained("facebook/wav2vec2-large-xlsr-53")
         self.processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-large-xlsr-53")
         self.save_path = save_path
@@ -17,6 +19,14 @@ class xlsr_reader(object):
             features = self.model.extract_features(inputs.input_values)
             array = features.numpy()
             np.save(self.save_path+filepath.replace('.wav', '')+'.npy', array)
+
+class label_reader(object):
+    def __init__(self, save_path):
+        super.__init__(self)
+        self.save_path = save_path
+
+    def load_labels_from_csv(self, csv_path):
+
 
         
 if __name__=='__main__':
