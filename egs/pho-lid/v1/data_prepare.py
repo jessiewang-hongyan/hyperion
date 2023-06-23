@@ -7,7 +7,7 @@ from transformers import Wav2Vec2Processor, Wav2Vec2FeatureExtractor, Wav2Vec2Mo
 
 # class xlsr_reader(object):
 #     def __init__(self, save_path):
-#         super.__init__(self)
+#         super.__init__(super)
 #         self.model = Wav2Vec2Model.from_pretrained("facebook/wav2vec2-large-xlsr-53")
 #         self.processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-large-xlsr-53")
 #         self.save_path = save_path
@@ -23,7 +23,7 @@ from transformers import Wav2Vec2Processor, Wav2Vec2FeatureExtractor, Wav2Vec2Mo
 
 # class audio_reader(object):
 #     def __init__(self, save_path):
-#         super.__init__(self)
+#         super.__init__(super)
 #         self.save_path = save_path
 
 #     def read_wav_by_seg(self, filepath:str, start:int, end:int):
@@ -37,7 +37,7 @@ from transformers import Wav2Vec2Processor, Wav2Vec2FeatureExtractor, Wav2Vec2Mo
 
 class label_reader(object):
     def __init__(self, save_path:str, audio_path:str):
-        super.__init__(self)
+        super.__init__(super)
         self.save_path = save_path
         self.audio_path = audio_path
         self.audio_segs = dict()
