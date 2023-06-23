@@ -75,7 +75,7 @@ class label_reader(object):
                 start, end = s["seg"]
                 utt = s["utt"]
 
-                seg_wav = waveform[:, start : end]
+                seg_wav = waveform[:, int(start) : int(end)]
                 seg_name = recording + '_' + utt +'.wav'
                 segment_path = os.path.join(self.save_path, seg_name)
                 torchaudio.save(segment_path, seg_wav, sample_rate)
