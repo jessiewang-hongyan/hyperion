@@ -46,25 +46,25 @@ do
     echo "filename: $file_name"
 done
 
-for f in $(find $dihard_dir -name "*.mp3" | sort)
+for f in $(find $data_root_dir/_audio -name $filename | sort)
 do
-    awk '{ bn=$1; sub(/.*\//,"",bn); sub(/\.mp3$/,"",bn);
+    awk '{ bn=$1; sub(/.*\//,"",bn); sub(/\.wav$/,"",bn);
           split(bn, parts, "_"); spk=parts[1] parts[2]; utt=parts[3];
           printf "%s-%010d-%010d %s %f %f\n", bn, spk*1000, utt*1000, bn, spk, utt}' $f
-done > $data_dir/vad.segments
+done > $processed_data_dir/vad.segments
 
-rm -f $data_dir/reco2num_spks
-for f in $(find $dihard_dir -name "*.rttm" | sort)
+rm -f $processed_data_dir/reco2num_spks
+for f in $(find $data_root_dir/_audio -name "*.rttm" | sort)
 do
     cat $f
-    awk '{ print $2, $8}' $f | sort -u | awk '{ f=$1; count++}END{ print f, count}' >> $data_dir/reco2num_spks
+    awk '{ print $2, $8}' $f | sort -u | awk '{ f=$1; count++}END{ print f, count}' >> $processed_data_dir/reco2num_spks
 
-done > $data_dir/diarization.rttm
+done > $processed_data_dir/diarization.rttm
 
-for f in $(find $dihard_dir -name "*.uem" | sort)
+for f in $(find $data_root_dir/_audio -name "*.uem" | sort)
 do
     cat $f
-done > $data_dir/diarization.uem
+done > $processed_data_dir/diarization.uem
 
-utils/validate_data_dir.sh --no-feats --no-text $data_dir
+utils/validate_data_dir.sh --no-feats --no-text $processed_data_dir
     
