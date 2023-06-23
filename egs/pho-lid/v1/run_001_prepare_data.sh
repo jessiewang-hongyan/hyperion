@@ -42,4 +42,8 @@ config_file=default_config.sh
 
 source ~/.bashrc
 conda activate merlion
+
+mkdir ./data
+mkdir ./data/seg
+
 python ./data_prepare.py
