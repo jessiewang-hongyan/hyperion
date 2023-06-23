@@ -66,7 +66,7 @@ class label_reader(object):
                     self.audio_segs[audio].append(temp)
                            
     def read_audio_seg(self):
-        for recording in self.audio_segs.keys()[:1]:
+        for recording in self.audio_segs.keys():
             segments = self.audio_segs[recording]
             audio_path = self.audio_path + '/' + recording
             waveform, sample_rate = torchaudio.load(audio_path)
