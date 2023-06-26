@@ -1,25 +1,10 @@
 import os
+import math
 import numpy as np
 import csv
 import torch
 import torchaudio
 from transformers import Wav2Vec2Processor, Wav2Vec2FeatureExtractor, Wav2Vec2Model
-
-# class xlsr_reader(object):
-#     def __init__(self, save_path):
-#         super.__init__(super)
-#         self.model = Wav2Vec2Model.from_pretrained("facebook/wav2vec2-large-xlsr-53")
-#         self.processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-large-xlsr-53")
-#         self.save_path = save_path
-
-#     def read_wav(self, filepath:str):
-#         waveform, sample_rate = torchaudio.load(filepath)
-#         inputs = self.processor(waveform, sampling_rate=sample_rate, return_tensors="pt", padding=True)
-
-#         with torch.no_grad():
-#             features = self.model.extract_features(inputs.input_values)
-#             array = features.numpy()
-#             np.save(self.save_path+filepath.replace('.wav', '')+'.npy', array)
 
 # class audio_reader(object):
 #     def __init__(self, save_path):
@@ -31,9 +16,6 @@ from transformers import Wav2Vec2Processor, Wav2Vec2FeatureExtractor, Wav2Vec2Mo
 #         waveform1 = waveform1[:, frame_offset : frame_offset + num_frames]
 #         metadata = torchaudio.info(waveform)
 #         print(metadata)
-
-
-
 
 class label_reader(object):
     def __init__(self, save_path:str, audio_path:str):
@@ -58,6 +40,7 @@ class label_reader(object):
                 temp['seg'] = (start, end)
                 temp['lab'] = lang
                 temp['utt'] = utt
+                temp['length'] = length
                 
                 if audio not in self.audio_segs.keys() and audio == 'TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav':
                     self.audio_segs[audio] = list()
@@ -66,6 +49,9 @@ class label_reader(object):
                     self.audio_segs[audio].append(temp)
                            
     def read_audio_seg(self):
+        # mapping file
+        file_path = os.path.join(self.save_path, 'data_label_list.txt')
+
         for recording in self.audio_segs.keys():
             segments = self.audio_segs[recording]
             audio_path = self.audio_path + '/' + recording
@@ -74,16 +60,42 @@ class label_reader(object):
             for s in segments:
                 start, end = s["seg"]
                 utt = s["utt"]
+                lab = s['lab']
+                length = s['length']
 
+                # segment speech
                 seg_wav = waveform[:, int(start) : int(end)]
-                seg_name = recording.replace('.wav', '') + '_' + utt +'.wav'
+                seg_name = 'seg/' + recording.replace('.wav', '') + '_' + utt +'.wav'
                 segment_path = os.path.join(self.save_path, seg_name)
                 torchaudio.save(segment_path, seg_wav, sample_rate)
+
+                # write in the file
+                with open(file_path, 'w') as file:
+                    T_prime = math.ceil(length / 20)
+                    file.write(segment_path.replace('.wav', '.npy')+ ' ' + lab + ' ' + str(T_prime) + '\n')
+
+
+
+class xlsr_reader(object):
+    def __init__(self, save_path):
+        super.__init__(super)
+        self.model = Wav2Vec2Model.from_pretrained("facebook/wav2vec2-large-xlsr-53")
+        self.processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-large-xlsr-53")
+        self.save_path = save_path
+
+    def read_wav(self, filepath:str):
+        waveform, sample_rate = torchaudio.load(filepath)
+        inputs = self.processor(waveform, sampling_rate=sample_rate, return_tensors="pt", padding=True)
+
+        with torch.no_grad():
+            features = self.model.extract_features(inputs.input_values)
+            array = features.numpy()
+            np.save(self.save_path+filepath.replace('.wav', '')+'.npy', array)
 
         
 if __name__ == '__main__':
     audio_path = '/export/fs05/ywang793/merlion_data/MERLIon-CCS-Challenge_Development-Set_v001/_CONFIDENTIAL/_audio'
-    save_path = './data/seg'
+    save_path = './data'
     csv_path = '/export/fs05/ywang793/merlion_data/MERLIon-CCS-Challenge_Development-Set_v001/_CONFIDENTIAL/_labels/_MERLIon-CCS-Challenge_Development-Set_Language-Labels_v001.csv'
     
     reader = label_reader(save_path, audio_path)
