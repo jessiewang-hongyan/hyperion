@@ -17,6 +17,24 @@ from transformers import Wav2Vec2Processor, Wav2Vec2FeatureExtractor, Wav2Vec2Mo
 #         metadata = torchaudio.info(waveform)
 #         print(metadata)
 
+
+class feature_extract(object):
+    def __init__(self, save_path):
+        super().__init__()
+        self.model = Wav2Vec2Model.from_pretrained("facebook/wav2vec2-large-xlsr-53")
+        self.processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-large-xlsr-53")
+        self.save_path = save_path
+
+    def read_wav(self, filepath:str):
+        waveform, sample_rate = torchaudio.load(filepath)
+        inputs = self.processor(waveform, sampling_rate=sample_rate, return_tensors="pt", padding=True)
+
+        with torch.no_grad():
+            features = self.model.extract_features(inputs.input_values)
+            array = features.numpy()
+            np.save(self.save_path+filepath.replace('.wav', '')+'.npy', array)
+
+
 class label_reader(object):
     def __init__(self, save_path:str, audio_path:str):
         super().__init__()
@@ -51,6 +69,7 @@ class label_reader(object):
     def read_audio_seg(self):
         # mapping file
         file_path = os.path.join(self.save_path, 'data_label_list.txt')
+        extractor = feature_extract(self.save_path)
 
         for recording in self.audio_segs.keys():
             segments = self.audio_segs[recording]
@@ -74,25 +93,10 @@ class label_reader(object):
                     T_prime = math.ceil(length / 20)
                     file.write(segment_path.replace('.wav', '.npy')+ ' ' + lab + ' ' + str(T_prime) + '\n')
 
+                # convert
+                extractor.read_wav(segment_path)
 
-
-class xlsr_reader(object):
-    def __init__(self, save_path):
-        super.__init__(super)
-        self.model = Wav2Vec2Model.from_pretrained("facebook/wav2vec2-large-xlsr-53")
-        self.processor = Wav2Vec2Processor.from_pretrained("facebook/wav2vec2-large-xlsr-53")
-        self.save_path = save_path
-
-    def read_wav(self, filepath:str):
-        waveform, sample_rate = torchaudio.load(filepath)
-        inputs = self.processor(waveform, sampling_rate=sample_rate, return_tensors="pt", padding=True)
-
-        with torch.no_grad():
-            features = self.model.extract_features(inputs.input_values)
-            array = features.numpy()
-            np.save(self.save_path+filepath.replace('.wav', '')+'.npy', array)
-
-        
+       
 if __name__ == '__main__':
     audio_path = '/export/fs05/ywang793/merlion_data/MERLIon-CCS-Challenge_Development-Set_v001/_CONFIDENTIAL/_audio'
     save_path = './data'
@@ -101,4 +105,7 @@ if __name__ == '__main__':
     reader = label_reader(save_path, audio_path)
     reader.get_seg(csv_path)
     reader.read_audio_seg()
+
+    
+
     
