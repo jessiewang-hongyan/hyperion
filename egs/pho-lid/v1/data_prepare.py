@@ -67,11 +67,11 @@ class label_reader(object):
                 temp['utt'] = utt
                 temp['length'] = length
                 
-                if audio not in self.audio_segs.keys() and audio == 'TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav':
+                if audio not in self.audio_segs.keys(): #and audio == 'TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav':
                     self.audio_segs[audio] = list()
                 
-                if audio == 'TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav':
-                    self.audio_segs[audio].append(temp)
+                #if audio == 'TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav':
+                self.audio_segs[audio].append(temp)
                            
     def read_audio_seg(self):
         # mapping file
@@ -105,7 +105,7 @@ class label_reader(object):
 
 
 if __name__ == '__main__':
-    audio_path = '/export/fs05/ywang793/merlion_data/MERLIon-CCS-Challenge_Development-Set_v001/_CONFIDENTIAL/_audio'
+    audio_path = '/export/fs05/ywang793/hyperion/egs/pho-lid/v1/data/wav'
     save_path = './data'
     csv_path = '/export/fs05/ywang793/merlion_data/MERLIon-CCS-Challenge_Development-Set_v001/_CONFIDENTIAL/_labels/_MERLIon-CCS-Challenge_Development-Set_Language-Labels_v001.csv'
     

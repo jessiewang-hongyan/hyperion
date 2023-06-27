@@ -16,16 +16,17 @@ echo "making data dir $processed_data_dir"
 
 mkdir -p $processed_data_dir
 mkdir -p $processed_data_dir/wav
+mkdir -p $processed_data_dir/seg
 
 file_name=TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav
 
-find $data_root_dir/_audio -name $file_name | \
- awk '
-{ bn=$1; sub(/.*\//,"",bn); sub(/\.wav$/,"",bn);
-    split(bn, parts, "_");
-  print parts[2], $processed_data_dir"/wav/"parts[2]"_"parts[5]".wav" }' | sort -k1,1 > $data_dir/wav.scp
-awk '{ print $1,$1}' $data_dir/wav.scp  > $data_dir/utt2spk
-cat $data_dir/utt2spk > $data_dir/spk2utt
+# find $data_root_dir/_audio -name $file_name | \
+#  awk '
+# { bn=$1; sub(/.*\//,"",bn); sub(/\.wav$/,"",bn);
+#     split(bn, parts, "_");
+#   print parts[2], $processed_data_dir"/wav/"parts[2]"_"parts[5]".wav" }' | sort -k1,1 > $data_dir/wav.scp
+# awk '{ print $1,$1}' $data_dir/wav.scp  > $data_dir/utt2spk
+# cat $data_dir/utt2spk > $data_dir/spk2utt
 
 
 files=$(find $data_root_dir/_audio -name $filename)
@@ -46,25 +47,25 @@ do
     echo "filename: $file_name"
 done
 
-for f in $(find $data_root_dir/_audio -name $filename | sort)
-do
-    awk '{ bn=$1; sub(/.*\//,"",bn); sub(/\.wav$/,"",bn);
-          split(bn, parts, "_"); spk=parts[1] parts[2]; utt=parts[3];
-          printf "%s-%010d-%010d %s %f %f\n", bn, spk*1000, utt*1000, bn, spk, utt}' $f
-done > $processed_data_dir/vad.segments
+# for f in $(find $data_root_dir/_audio -name $filename | sort)
+# do
+#     awk '{ bn=$1; sub(/.*\//,"",bn); sub(/\.wav$/,"",bn);
+#           split(bn, parts, "_"); spk=parts[1] parts[2]; utt=parts[3];
+#           printf "%s-%010d-%010d %s %f %f\n", bn, spk*1000, utt*1000, bn, spk, utt}' $f
+# done > $processed_data_dir/vad.segments
 
-rm -f $processed_data_dir/reco2num_spks
-for f in $(find $data_root_dir/_audio -name "*.rttm" | sort)
-do
-    cat $f
-    awk '{ print $2, $8}' $f | sort -u | awk '{ f=$1; count++}END{ print f, count}' >> $processed_data_dir/reco2num_spks
+# rm -f $processed_data_dir/reco2num_spks
+# for f in $(find $data_root_dir/_audio -name "*.rttm" | sort)
+# do
+#     cat $f
+#     awk '{ print $2, $8}' $f | sort -u | awk '{ f=$1; count++}END{ print f, count}' >> $processed_data_dir/reco2num_spks
 
-done > $processed_data_dir/diarization.rttm
+# done > $processed_data_dir/diarization.rttm
 
-for f in $(find $data_root_dir/_audio -name "*.uem" | sort)
-do
-    cat $f
-done > $processed_data_dir/diarization.uem
+# for f in $(find $data_root_dir/_audio -name "*.uem" | sort)
+# do
+#     cat $f
+# done > $processed_data_dir/diarization.uem
 
-utils/validate_data_dir.sh --no-feats --no-text $processed_data_dir
+# utils/validate_data_dir.sh --no-feats --no-text $processed_data_dir
     

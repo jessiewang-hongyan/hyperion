@@ -37,13 +37,11 @@ config_file=default_config.sh
 #     local/make_dihard2019.sh $dihard2019_eval data/dihard2019_eval
 # fi
 # local/make_dihard2019.sh  [where data in] [information/output of data]
-# chmod +x local/make_pholid.sh
-# local/make_pholid.sh
+
+chmod +x local/make_pholid.sh
+local/make_pholid.sh
 
 source ~/.bashrc
 conda activate merlion
-
-mkdir ./data
-mkdir ./data/seg
 
 python ./data_prepare.py
