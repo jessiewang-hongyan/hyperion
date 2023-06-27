@@ -18,7 +18,7 @@ mkdir -p $processed_data_dir
 mkdir -p $processed_data_dir/wav
 mkdir -p $processed_data_dir/seg
 
-file_name=TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav
+file_name=TTS_P91182TT_VCST_ECxxx_01_AO_48503281_v001_R004_CRR_MERLIon-CCS.wav
 
 # find $data_root_dir/_audio -name $file_name | \
 #  awk '
