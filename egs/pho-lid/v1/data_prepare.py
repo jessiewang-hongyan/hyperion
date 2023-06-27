@@ -38,7 +38,7 @@ class feature_extract(object):
         input_values = self.feature_extractor(waveform, sampling_rate=xlsr_rate, return_tensors="pt").input_values
         
         with torch.no_grad():
-            features = self.processor.model.extract_features(input_values)
+            features = self.feature_extractor(input_values)
             array = features.numpy()
             np.save(self.save_path+filepath.replace('.wav', '')+'.npy', array)
 
