@@ -9,8 +9,8 @@
 #   echo " e.g.: $0 /export/corpora/LDC/LDC2019E31 data/dihard2019_dev"
 # fi
 
-data_root_dir=/export/fs05/ywang793/merlion_data/MERLIon-CCS-Challenge_Development-Set_v001/_CONFIDENTIAL/_audio
-processed_data_dir=/export/fs05/ywang793/hyperion/egs/pholid/v1/data
+data_root_dir="/export/fs05/ywang793/merlion_data/MERLIon-CCS-Challenge_Development-Set_v001/_CONFIDENTIAL/_audio"
+processed_data_dir="/export/fs05/ywang793/hyperion/egs/pholid/v1/data"
 
 echo "making data dir $processed_data_dir"
 
@@ -18,7 +18,7 @@ mkdir -p $processed_data_dir
 mkdir -p $processed_data_dir/wav
 mkdir -p $processed_data_dir/seg
 
-file_name=TTS_P91182TT_VCST_ECxxx_01_AO_48503281_v001_R004_CRR_MERLIon-CCS.wav
+file_name="TTS_P91182TT_VCST_ECxxx_01_AO_48503281_v001_R004_CRR_MERLIon-CCS.wav"
 
 # find $data_root_dir/_audio -name $file_name | \
 #  awk '
@@ -29,7 +29,7 @@ file_name=TTS_P91182TT_VCST_ECxxx_01_AO_48503281_v001_R004_CRR_MERLIon-CCS.wav
 # cat $data_dir/utt2spk > $data_dir/spk2utt
 
 
-files=$(find "$data_root_dir" -name "$filename")
+files=$(find "$data_root_dir" -name "$filename" -type f)
 
 for f in $files
 do
