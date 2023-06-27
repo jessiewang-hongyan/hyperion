@@ -29,14 +29,15 @@ file_name=TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav
 # cat $data_dir/utt2spk > $data_dir/spk2utt
 
 
-files=$(find $data_root_dir -name $filename)
+files=$(find "$data_root_dir" -name "$filename")
 
 for f in $files
 do
     # Extract the base name of the file
     base_name=$(basename "$f")
     # Remove the extension from the base name
-    file_name=$(echo "${base_name%.*}" | cut -d '_' -f 2,5)
+    # file_name=$(echo "${base_name%.*}" | cut -d '_' -f 2,5)
+    file_name=$(echo "${base_name%.*}")
     
     # Construct the output file path with the desired format
     output_file="$processed_data_dir/wav/$file_name.wav"
