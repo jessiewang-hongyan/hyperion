@@ -22,20 +22,20 @@ class feature_extract(object):
     def __init__(self, save_path):
         super().__init__()
         model_name = "facebook/wav2vec2-large-xlsr-53"
-        self.processor = Wav2Vec2Processor.from_pretrained(model_name)
-        # self.feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained(model_name)
+        # self.processor = Wav2Vec2Processor.from_pretrained(model_name)
+        self.feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained(model_name)
 
     def read_wav(self, filepath:str):
         waveform, sample_rate = torchaudio.load(filepath)
-        inputs = self.processor(waveform, sampling_rate=sample_rate, return_tensors="pt", padding=True)
+        # inputs = self.processor(waveform, sampling_rate=sample_rate, return_tensors="pt", padding=True)
 
         # Resample if necessary
-        xlsr_rate = self.processor.feature_extractor.sampling_rate
+        xlsr_rate = self.feature_extractor.sampling_rate
         if sample_rate != xlsr_rate:
             waveform = torchaudio.transforms.Resample(sample_rate, xlsr_rate)(waveform)
         # extract features
         # input_values = self.feature_extractor(waveform, sampling_rate=xlsr_rate, return_tensors="pt").input_values
-        input_values = self.processor(waveform, sampling_rate=xlsr_rate, return_tensors="pt").input_values
+        input_values = self.feature_extractor(waveform, sampling_rate=xlsr_rate, return_tensors="pt").input_values
         
         with torch.no_grad():
             features = self.processor.model.extract_features(input_values)
