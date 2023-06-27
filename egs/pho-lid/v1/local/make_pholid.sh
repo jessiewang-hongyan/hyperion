@@ -9,7 +9,7 @@
 #   echo " e.g.: $0 /export/corpora/LDC/LDC2019E31 data/dihard2019_dev"
 # fi
 
-data_root_dir=/export/fs05/ywang793/merlion_data/MERLIon-CCS-Challenge_Development-Set_v001/_CONFIDENTIAL
+data_root_dir=/export/fs05/ywang793/merlion_data/MERLIon-CCS-Challenge_Development-Set_v001/_CONFIDENTIAL/_audio
 processed_data_dir=/export/fs05/ywang793/hyperion/egs/pholid/v1/data
 
 echo "making data dir $processed_data_dir"
@@ -29,7 +29,7 @@ file_name=TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav
 # cat $data_dir/utt2spk > $data_dir/spk2utt
 
 
-files=$(find $data_root_dir/_audio -name $filename)
+files=$(find $data_root_dir -name $filename)
 
 for f in $files
 do
