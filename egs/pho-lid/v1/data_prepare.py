@@ -98,13 +98,13 @@ class label_reader(object):
 
                 # write in the file
                 with open(file_path, 'w') as file:
-                    T_prime = math.ceil(length / 20)
+                    T_prime = math.ceil(int(length) / 20)
                     file.write(segment_path.replace('.wav', '.npy')+ ' ' + lab + ' ' + str(T_prime) + '\n')
 
                 # convert
                 extractor.read_wav(segment_path)
 
-       
+
 if __name__ == '__main__':
     audio_path = '/export/fs05/ywang793/merlion_data/MERLIon-CCS-Challenge_Development-Set_v001/_CONFIDENTIAL/_audio'
     save_path = './data'
