@@ -10,7 +10,7 @@
 # fi
 
 data_root_dir="/export/fs05/ywang793/merlion_data/MERLIon-CCS-Challenge_Development-Set_v001/_CONFIDENTIAL/_audio"
-processed_data_dir="/export/fs05/ywang793/hyperion/egs/pholid/v1/data"
+processed_data_dir="/export/fs05/ywang793/hyperion/egs/pho-lid/v1/data"
 
 echo "data dir $data_root_dir"
 echo "making data dir $processed_data_dir"
