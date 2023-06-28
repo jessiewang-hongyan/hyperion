@@ -21,7 +21,7 @@ mkdir -p $processed_data_dir/seg
 
 file_name="TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav"
 
-files=$(find "$data_root_dir" -name "$filename" -type f)
+files=$(find "$data_root_dir" -name "$filename")
 
 for f in $files
 do
