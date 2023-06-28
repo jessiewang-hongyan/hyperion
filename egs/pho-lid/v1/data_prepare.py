@@ -100,7 +100,7 @@ class label_reader(object):
                 torchaudio.save(segment_path, seg_wav, sample_rate)
 
                 # write in the file
-                with open(file_path, 'w') as file:
+                with open(file_path, 'a') as file:
                     T_prime = math.ceil(int(length) / 20)
                     file.write(segment_path.replace('.wav', '.npy')+ ' ' + lab + ' ' + str(T_prime) + '\n')
 
