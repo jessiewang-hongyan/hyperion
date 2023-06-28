@@ -71,8 +71,8 @@ class label_reader(object):
                     if audio not in self.audio_segs.keys() and audio == 'TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav':
                         self.audio_segs[audio] = list()
                     
-                    #if audio == 'TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav':
-                    self.audio_segs[audio].append(temp)
+                    if audio == 'TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav':
+                        self.audio_segs[audio].append(temp)
                            
     def read_audio_seg(self):
         # mapping file
