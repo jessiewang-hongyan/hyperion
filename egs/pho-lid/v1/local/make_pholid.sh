@@ -19,10 +19,10 @@ mkdir -p $processed_data_dir
 mkdir -p $processed_data_dir/wav
 mkdir -p $processed_data_dir/seg
 
-file_name="*.wav"
+file_name="TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav"
 
-files=$(find "$data_root_dir" -name "$filename")
-echo "find $data_root_dir -name $filename"
+files=$(find "$data_root_dir" -name "$file_name")
+echo "find $data_root_dir -name $file_name"
 
 if [[ -n "$files" ]]; then
     for f in $files
