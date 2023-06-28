@@ -40,8 +40,3 @@ config_file=default_config.sh
 
 # chmod +x local/make_pholid.sh
 . local/make_pholid.sh
-
-source ~/.bashrc
-conda activate merlion
-
-python ./data_prepare.py

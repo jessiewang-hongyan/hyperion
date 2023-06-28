@@ -70,3 +70,7 @@ done
 
 # utils/validate_data_dir.sh --no-feats --no-text $processed_data_dir
     
+source ~/.bashrc
+conda activate merlion
+
+python ./data_prepare.py
