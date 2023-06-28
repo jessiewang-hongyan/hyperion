@@ -22,14 +22,12 @@ class feature_extract(object):
     def __init__(self, save_path):
         super().__init__()
         model_name = "facebook/wav2vec2-large-xlsr-53"
-        # self.processor = Wav2Vec2Processor.from_pretrained(model_name)
         self.feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained(model_name)
+        self.save_path = save_path
 
     def read_wav(self, filepath:str):
         waveform, sample_rate = torchaudio.load(filepath)
-        # shape_of_speech = waveform.shape
-        # print(f'shape of speech: {shape_of_speech}')
-        waveform = waveform.reshape(waveform.shape[1])
+        waveform = waveform.flatten()
         print(f'shape of speech: {waveform.shape}')
 
         # Resample if necessary
@@ -42,7 +40,7 @@ class feature_extract(object):
         
         with torch.no_grad():
             features = self.feature_extractor(input_values)
-            np.save(self.save_path+filepath.replace('.wav', '')+'.npy', features)
+            np.save(filepath.replace('.wav', '')+'.npy', features)
 
 
 class label_reader(object):
@@ -100,7 +98,7 @@ class label_reader(object):
                 torchaudio.save(segment_path, seg_wav, sample_rate)
 
                 # write in the file
-                with open(file_path, 'w') as file:
+                with open(file_path, 'a') as file:
                     T_prime = math.ceil(int(length) / 20)
                     file.write(segment_path.replace('.wav', '.npy')+ ' ' + lab + ' ' + str(T_prime) + '\n')
 
