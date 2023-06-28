@@ -27,8 +27,8 @@ class feature_extract(object):
 
     def read_wav(self, filepath:str):
         waveform, sample_rate = torchaudio.load(filepath)
-        num_channels = waveform.shape[0]
-        print(f'num channels: {num_channels}')
+        shape_of_speech = waveform.shape
+        print(f'shape of speech: {shape_of_speech}')
         
         # Resample if necessary
         xlsr_rate = self.feature_extractor.sampling_rate
