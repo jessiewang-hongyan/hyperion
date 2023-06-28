@@ -45,7 +45,7 @@ else
     echo "No files found matching the specified pattern."
 fi
     
-# source ~/.bashrc
-# conda activate merlion
+source ~/.bashrc
+conda activate merlion
 
-# python ./data_prepare.py
+python ./data_prepare.py
