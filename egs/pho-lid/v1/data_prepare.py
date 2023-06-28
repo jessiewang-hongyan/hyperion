@@ -68,7 +68,7 @@ class label_reader(object):
                 temp['length'] = length
                 
                 if audio != 'audio_name':
-                    if audio not in self.audio_segs.keys() and audio != 'audio_name': #'TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav':
+                    if audio not in self.audio_segs.keys() and audio == 'TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav':
                         self.audio_segs[audio] = list()
                     
                     #if audio == 'TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav':
