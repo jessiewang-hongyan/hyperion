@@ -12,8 +12,8 @@
 data_root_dir="/export/fs05/ywang793/merlion_data/MERLIon-CCS-Challenge_Development-Set_v001/_CONFIDENTIAL/_audio"
 processed_data_dir="/export/fs05/ywang793/hyperion/egs/pho-lid/v1/data"
 
-echo "data dir $data_root_dir"
-echo "making data dir $processed_data_dir"
+# echo "data dir $data_root_dir"
+# echo "making data dir $processed_data_dir"
 
 mkdir -p $processed_data_dir
 mkdir -p $processed_data_dir/wav
@@ -22,7 +22,7 @@ mkdir -p $processed_data_dir/seg
 file_name="TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav"
 
 files=$(find "$data_root_dir" -name "$file_name")
-echo "find $data_root_dir -name $file_name"
+# echo "find $data_root_dir -name $file_name"
 
 if [[ -n "$files" ]]; then
     for f in $files
@@ -39,7 +39,7 @@ if [[ -n "$files" ]]; then
     ffmpeg -i "$f" -ar 16000 -ac 1 -f wav "$output_file"
 
     # Display a message with the filename
-    echo "filename: $file_name"
+    # echo "filename: $file_name"
     done
 else
     echo "No files found matching the specified pattern."
