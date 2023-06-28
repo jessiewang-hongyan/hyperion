@@ -40,7 +40,7 @@ do
     echo "filename: $file_name"
 done
     
-source ~/.bashrc
-conda activate merlion
+# source ~/.bashrc
+# conda activate merlion
 
-python ./data_prepare.py
+# python ./data_prepare.py
