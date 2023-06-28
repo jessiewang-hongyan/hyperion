@@ -22,7 +22,7 @@ mkdir -p $processed_data_dir/seg
 file_name="*.wav"
 
 files=$(find "$data_root_dir" -name "$filename")
-echo "files found: $files"
+echo "find $data_root_dir -name $filename"
 
 if [[ -n "$files" ]]; then
     for f in $files
