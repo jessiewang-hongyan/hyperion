@@ -24,8 +24,9 @@ file_name="TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav"
 files=$(find "$data_root_dir" -name "$filename")
 echo "files found: $files"
 
-for f in $files
-do
+if [[ -n "$files" ]]; then
+    for f in $files
+    do
     # Extract the base name of the file
     base_name=$(basename "$f")
     # Remove the extension from the base name
@@ -35,11 +36,14 @@ do
     # Construct the output file path with the desired format
     output_file="$processed_data_dir/wav/$file_name.wav"
     # Convert the file using FFmpeg
-    ffmpeg -i "$f"  -ar 16000 -ac 1 -f wav "$output_file"
+    ffmpeg -i "$f" -ar 16000 -ac 1 -f wav "$output_file"
 
     # Display a message with the filename
     echo "filename: $file_name"
-done
+    done
+else
+    echo "No files found matching the specified pattern."
+fi
     
 # source ~/.bashrc
 # conda activate merlion
