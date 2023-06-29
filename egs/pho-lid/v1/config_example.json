@@ -1,11 +1,11 @@
 {
   "model_name": "pholid_sample3_seed66",
   "Input": {
-    "userroot": "/home/hexin/",
-    "train": "/Desktop/hexin/dataset/train.txt",
+    "userroot": "/export/fs05/ywang793/hyperion/egs/pho-lid/v1",
+    "train": "/data/data_label_list.txt",
     "valid": "none",
-    "test":  "Desktop/hexin/dataset/test.txt",
-    "log": "/Desktop/hexin/dataset/log/",
+    "test":  "/data/data_label_list.txt",
+    "log": "/logs",
     "_comment": "Input your data dir here, each line: data_file_path lable_index segment_len"
   },
   "model_config": {
@@ -25,8 +25,8 @@
     "optimizer": "Adam",
     "scheduler": "warmup_cosine",
     "num_work": 4,
-    "device": 3,
-    "DDP": False,
+    "device": 0,
+    "DDP": false,
     "SSL_epochs":3,
     "warmup_step": -1,
     "valid_epochs": 3,
@@ -41,6 +41,6 @@
     "hard_sample_epochs":0,
     "_comment": "warmup_step = -1 denotes default value, num_work is better to be your_cpu_cores/4"
   },
-  "kaldi": "/Desktop/kaldi/"
+  "kaldi": "/export/fs05/ywang793/hyperion/tools/kaldi/"
 
 }

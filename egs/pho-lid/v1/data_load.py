@@ -3,6 +3,7 @@ import numpy as np
 import torch
 import torch.utils.data as data
 import torch.nn.utils.rnn as rnn_utils
+from torchvision.transforms import Lambda
 
 def collate_fn(batch):
     batch.sort(key=lambda x: len(x[1]), reverse=True)
@@ -32,6 +33,14 @@ class RawFeatures(data.Dataset):
             self.feature_list = [i.split()[0] for i in lines]
             self.label_list = [i.split()[1] for i in lines]
             self.seq_len_list = [i.split()[2].strip() for i in lines]
+
+            # convert str labels into idx labels
+            unique_labels = list(set(self.label_list))
+            label_map = {label: index for index, label in enumerate(unique_labels)}
+            transform = Lambda(lambda x: label_map[x])
+            self.label_list = [transform(label) for label in self.label_list]
+            print(f'type of feature:\n')
+            print(np.load(self.feature_list[0], allow_pickle=True).tolist())
 
     def __getitem__(self, index):
         feature_path = self.feature_list[index]

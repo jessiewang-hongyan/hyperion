@@ -36,7 +36,7 @@ class feature_extract(object):
             waveform = torchaudio.transforms.Resample(sample_rate, xlsr_rate)(waveform)
         # extract features
         # input_values = self.feature_extractor(waveform, sampling_rate=xlsr_rate, return_tensors="pt").input_values
-        input_values = self.feature_extractor(waveform, sampling_rate=xlsr_rate, return_tensors="np").input_values
+        input_values = self.feature_extractor(waveform, sampling_rate=xlsr_rate, return_tensors="np", return_attention_mask=False).input_values
         
         with torch.no_grad():
             features = self.feature_extractor(input_values)

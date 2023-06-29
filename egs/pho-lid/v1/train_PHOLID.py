@@ -5,6 +5,10 @@ from ssl_sampler import *
 from model import *
 from data_load import *
 import torch.nn as nn
+import argparse
+import os
+from torch.utils.data import DataLoader
+from tqdm import tqdm
 
 
 def setup_seed(seed):
@@ -72,6 +76,7 @@ def validation(valid_txt, model, model_name, device, kaldi, log_dir, num_lang):
 
 def main():
     parser = argparse.ArgumentParser(description='paras for making data')
+    # parser = argparse.ArgumentParser()
     parser.add_argument('--json', type=str, default='xsa_config.json')
     args = parser.parse_args()
     with open(args.json, 'r') as json_obj:
@@ -82,8 +87,11 @@ def main():
     else:
         print("Random seed is {}".format(seed))
         setup_seed(seed)
-    device = torch.device('cuda:{}'.format(config_proj["optim_config"]["device"])
+    # device = torch.device('cuda:{}'.format(config_proj["optim_config"]["device"])
+    #                       if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda:{}'.format(CUDA_VISIBLE_DEVICES)
                           if torch.cuda.is_available() else 'cpu')
+    print(f'device:{device}')
     feat_dim = config_proj["model_config"]["d_k"]
     n_heads = config_proj["model_config"]["n_heads"]
     model = PHOLID(input_dim=config_proj["model_config"]["feat_dim"],
@@ -193,4 +201,6 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    # main()
+    tmp = np.load('./data/seg/TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS_a2.npy', allow_pickle=True)
+    print(tmp)
