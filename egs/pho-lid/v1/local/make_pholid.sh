@@ -18,34 +18,43 @@ processed_data_dir="/export/fs05/ywang793/hyperion/egs/pho-lid/v1/data"
 mkdir -p $processed_data_dir
 mkdir -p $processed_data_dir/wav
 mkdir -p $processed_data_dir/seg
+mkdir -p $processed_data_dir/processed
 
-file_name="TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav"
+# file_name="TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav"
 
-files=$(find "$data_root_dir" -name "$file_name")
-# echo "find $data_root_dir -name $file_name"
+# files=$(find "$data_root_dir" -name "$file_name")
+# # echo "find $data_root_dir -name $file_name"
 
-if [[ -n "$files" ]]; then
-    for f in $files
-    do
-    # Extract the base name of the file
-    base_name=$(basename "$f")
-    # Remove the extension from the base name
-    # file_name=$(echo "${base_name%.*}" | cut -d '_' -f 2,5)
-    file_name="${base_name%.*}"
+# if [[ -n "$files" ]]; then
+#     for f in $files
+#     do
+#     # Extract the base name of the file
+#     base_name=$(basename "$f")
+#     # Remove the extension from the base name
+#     # file_name=$(echo "${base_name%.*}" | cut -d '_' -f 2,5)
+#     file_name="${base_name%.*}"
     
-    # Construct the output file path with the desired format
-    output_file="$processed_data_dir/wav/$file_name.wav"
-    # Convert the file using FFmpeg
-    ffmpeg -i "$f" -ar 16000 -ac 1 -f wav "$output_file"
+#     # Construct the output file path with the desired format
+#     output_file="$processed_data_dir/wav/$file_name.wav"
+#     # Convert the file using FFmpeg
+#     ffmpeg -i "$f" -ar 16000 -ac 1 -f wav "$output_file"
 
-    # Display a message with the filename
-    # echo "filename: $file_name"
-    done
-else
-    echo "No files found matching the specified pattern."
-fi
+#     # Display a message with the filename
+#     # echo "filename: $file_name"
+#     done
+# else
+#     echo "No files found matching the specified pattern."
+# fi
     
 source ~/.bashrc
 conda activate merlion
 
-python ./data_prepare.py
+# python ./data_prepare.py
+python ./data_prepare_new.py --step 0 \
+    --lredir /export/fs05/ywang793/hyperion/egs/pho-lid/v1/data \
+    --model xlsr_53 \
+    --device 0 \
+    --layer 16 \
+    --seglen 10\
+    --overlap 1\
+    --savedir /export/fs05/ywang793/hyperion/egs/pho-lid/v1/data/processed

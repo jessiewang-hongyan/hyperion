@@ -89,7 +89,7 @@ def main():
         setup_seed(seed)
     # device = torch.device('cuda:{}'.format(config_proj["optim_config"]["device"])
     #                       if torch.cuda.is_available() else 'cpu')
-    device = torch.device('cuda:{}'.format(CUDA_VISIBLE_DEVICES)
+    device = torch.device('cuda:{}'.format(0)
                           if torch.cuda.is_available() else 'cpu')
     print(f'device:{device}')
     feat_dim = config_proj["model_config"]["d_k"]
@@ -160,6 +160,10 @@ def main():
     for epoch in tqdm(range(total_epochs)):
         model.train()
         for step, (utt, labels, seq_len) in enumerate(train_data):
+            print('-------------------------------')
+            print(f'utt:{utt.shape}, labels:{labels.shape}, seq_len:{seq_len}')
+            print('-------------------------------')
+
             utt_ = utt.to(device=device)
             atten_mask = get_atten_mask(seq_len, utt_.size(0))
             atten_mask = atten_mask.to(device=device)
@@ -201,6 +205,4 @@ def main():
 
 
 if __name__ == "__main__":
-    # main()
-    tmp = np.load('./data/seg/TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS_a2.npy', allow_pickle=True)
-    print(tmp)
+    main()

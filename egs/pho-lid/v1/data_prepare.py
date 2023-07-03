@@ -39,7 +39,9 @@ class feature_extract(object):
         input_values = self.feature_extractor(waveform, sampling_rate=xlsr_rate, return_tensors="np", return_attention_mask=False).input_values
         
         with torch.no_grad():
-            features = self.feature_extractor(input_values)
+            features = self.feature_extractor(input_values)['input_values']
+            # print('features extracted:')
+            # print(features)
             np.save(filepath.replace('.wav', '')+'.npy', features)
 
 
@@ -61,18 +63,17 @@ class label_reader(object):
                 length = row[4]
                 lang = row[5]
                 overlap = row[6]
-
-                temp = dict()
-                temp['seg'] = (start, end)
-                temp['lab'] = lang
-                temp['utt'] = utt
-                temp['length'] = length
                 
                 if audio != 'audio_name':
+                    temp = dict()
+                    temp['seg'] = (int(start)*1000, int(end)*1000)
+                    temp['lab'] = lang
+                    temp['utt'] = utt
+                    temp['length'] = int(length)*1000
                     if audio not in self.audio_segs.keys() and audio == 'TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav':
                         self.audio_segs[audio] = list()
                     
-                    if audio == 'TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav':
+                    if overlap=='FALSE' and audio == 'TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav':
                         self.audio_segs[audio].append(temp)
                            
     def read_audio_seg(self):
@@ -91,19 +92,22 @@ class label_reader(object):
                 lab = s['lab']
                 length = s['length']
 
-                # segment speech
-                seg_wav = waveform[:, int(start) : int(end)]
-                seg_name = 'seg/' + recording.replace('.wav', '') + '_' + utt +'.wav'
-                segment_path = os.path.join(self.save_path, seg_name)
-                torchaudio.save(segment_path, seg_wav, sample_rate)
+                if lab != 'NON_SPEECH' and float(length)>9.99:
+                    # segment speech
+                    seg_wav = waveform[:, int(start) : int(end)]
+                    seg_name = recording.replace('.wav', '') + '_' + utt +'.wav'
+                    segment_path = os.path.join(self.save_path + '/seg', seg_name)
+                    torchaudio.save(segment_path, seg_wav, sample_rate)
 
-                # write in the file
-                with open(file_path, 'a') as file:
-                    T_prime = math.ceil(int(length) / 20)
-                    file.write(segment_path.replace('.wav', '.npy')+ ' ' + lab + ' ' + str(T_prime) + '\n')
+                    # write in the file
+                    with open(file_path, 'a') as file:
+                        # T_prime = math.ceil(int(length) / 20)
+                        # file.write(segment_path.replace('.wav', '.npy')+ ' ' + lab + ' ' + str(T_prime) + '\n')
+                        # file.write(segment_path.replace('.wav', '.npy')+ ' ' + lab + ' ' + str(T_prime) + '\n')
+                        file.write(seg_name+ ' ' + lab + '\n')
 
-                # convert
-                extractor.read_wav(segment_path)
+                    # convert
+                    # extractor.read_wav(segment_path)
 
 
 if __name__ == '__main__':

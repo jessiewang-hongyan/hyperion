@@ -2,9 +2,9 @@
   "model_name": "pholid_sample3_seed66",
   "Input": {
     "userroot": "/export/fs05/ywang793/hyperion/egs/pho-lid/v1",
-    "train": "/data/data_label_list.txt",
+    "train": "/data/processed/feat2lang.txt",
     "valid": "none",
-    "test":  "/data/data_label_list.txt",
+    "test":  "/data/processed/feat2lang.txt",
     "log": "/logs",
     "_comment": "Input your data dir here, each line: data_file_path lable_index segment_len"
   },

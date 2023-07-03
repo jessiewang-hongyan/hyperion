@@ -77,7 +77,7 @@ class ScaledDotProductAttention(nn.Module):
         # print(q.size())
         scores = torch.matmul(q, k.transpose(-1, -2))/ self.scale_factor
         if atten_mask is not None:
-            # print(atten_mask.size(),scores.size())
+            print(f'attention mask={atten_mask.size()}, scores size={scores.size()}, q size={q.size()}, k size={k.size()}, k.transpose(-1,-2) size={k.transpose(-1, -2).size()}')
             assert atten_mask.size() == scores.size()
             scores.masked_fill_(atten_mask, -1e9)
         atten = self.dropout(self.softmax(scores))

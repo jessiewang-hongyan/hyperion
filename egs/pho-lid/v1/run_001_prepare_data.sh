@@ -1,8 +1,4 @@
 #!/bin/bash
-# Copyright
-#                2018   Johns Hopkins University (Author: Jesus Villalba)
-# Apache 2.0.
-#
 #$ -N pholid_prepare
 #$ -j y -o /export/c12/ywang793/logs/log.pholid_prepare
 #$ -M ywang793@jh.edu
@@ -11,6 +7,12 @@
 #$ -wd /export/fs05/ywang793/hyperion/egs/pho-lid/v1
 # Submit to GPU
 #$ -q g.q
+
+source /home/gqin2/scripts/acquire-gpu
+# export CUDA_VISIBLE_DEVICES=$(free-gpu)
+
+echo "cuda device: $CUDA_VISIBLE_DEVICES"
+
 . ./cmd.sh
 . ./path.sh
 set -e
@@ -39,4 +41,7 @@ config_file=default_config.sh
 # local/make_dihard2019.sh  [where data in] [information/output of data]
 
 # chmod +x local/make_pholid.sh
+
+# uncomment this for merlion label processing
 . local/make_pholid.sh
+

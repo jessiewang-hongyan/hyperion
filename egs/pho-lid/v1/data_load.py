@@ -35,12 +35,12 @@ class RawFeatures(data.Dataset):
             self.seq_len_list = [i.split()[2].strip() for i in lines]
 
             # convert str labels into idx labels
-            unique_labels = list(set(self.label_list))
-            label_map = {label: index for index, label in enumerate(unique_labels)}
-            transform = Lambda(lambda x: label_map[x])
-            self.label_list = [transform(label) for label in self.label_list]
-            print(f'type of feature:\n')
-            print(np.load(self.feature_list[0], allow_pickle=True).tolist())
+            # unique_labels = list(set(self.label_list))
+            # label_map = {label: index for index, label in enumerate(unique_labels)}
+            # transform = Lambda(lambda x: label_map[x])
+            # self.label_list = [transform(label) for label in self.label_list]
+            # print(f'type of feature:\n')
+            # print(np.load(self.feature_list[0], allow_pickle=True).tolist())
 
     def __getitem__(self, index):
         feature_path = self.feature_list[index]
