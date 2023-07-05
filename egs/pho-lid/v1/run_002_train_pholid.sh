@@ -23,6 +23,8 @@ config_file=default_config.sh
 . parse_options.sh || exit 1;
 . datapath.sh 
 
+mkdir -p ./models
+
 source ~/.bashrc
 conda activate merlion
 

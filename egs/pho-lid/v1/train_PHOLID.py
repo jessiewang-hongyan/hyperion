@@ -158,6 +158,10 @@ def main():
     scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=warm_up_with_cosine_lr)
 
     for epoch in tqdm(range(total_epochs)):
+        # save ckpt in a folder
+        model_save_path = './models/'+model_name
+        os.mkdir(model_save_path)
+
         model.train()
         for step, (utt, labels, seq_len) in enumerate(train_data):
             print('-------------------------------')
@@ -194,7 +198,7 @@ def main():
                 print("Epoch [{}/{}], Step [{}/{}] Loss: {:.4f} LID: {:.4f} PHN: {:.4f}".
                       format(epoch + 1, total_epochs, step + 1, total_step, loss.item(),
                              loss_lid.item(), loss_phn.item()))
-        torch.save(model.state_dict(), '{}_epoch_{}.ckpt'.format(model_name, epoch))
+        torch.save(model.state_dict(), '{}_epoch_{}.ckpt'.format(model_save_path+'/'+model_name, epoch))
         if epoch >= total_epochs - valid_epochs - 1:
             if valid_txt is not None:
                 validation(valid_txt, model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
