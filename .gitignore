@@ -58,3 +58,10 @@ qq
 30.sh
 30.*.sh
 40.sh
+
+# for pholid
+egs/pho-lid/v1/data
+egs/pho-lid/v1/models
+egs/pho-lid/v1/data
+egs/pho-lid/v1/logs
+egs/pho-lid/v1/*.png

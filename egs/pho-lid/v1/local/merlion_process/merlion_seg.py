@@ -14,29 +14,6 @@ import librosa
 import soundfile as sf
 import subprocess
 
-# class feature_extract(object):
-#     def __init__(self, save_path):
-#         super().__init__()
-#         model_name = "facebook/wav2vec2-large-xlsr-53"
-#         self.feature_extractor = Wav2Vec2FeatureExtractor.from_pretrained(model_name)
-#         self.save_path = save_path
-
-#     def read_wav(self, filepath:str):
-#         waveform, sample_rate = torchaudio.load(filepath)
-#         waveform = waveform.flatten()
-#         print(f'shape of speech: {waveform.shape}')
-
-#         # Resample if necessary
-#         xlsr_rate = self.feature_extractor.sampling_rate
-#         if sample_rate != xlsr_rate:
-#             waveform = torchaudio.transforms.Resample(sample_rate, xlsr_rate)(waveform)
-#         input_values = self.feature_extractor(waveform, sampling_rate=xlsr_rate, return_tensors="np", return_attention_mask=False).input_values
-        
-#         with torch.no_grad():
-#             features = self.feature_extractor(input_values)['input_values']
-#             np.save(filepath.replace('.wav', '')+'.npy', features)
-
-
 class label_reader(object):
     def __init__(self, 
                  audio_path:str, 
@@ -85,15 +62,19 @@ class label_reader(object):
                 temp['lab'] = lang
                 temp['utt'] = utt
                 temp['length'] = int(length)*1000
-                if audio not in self.audio_segs.keys(): #and audio == 'TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav':
+                if audio not in self.audio_segs.keys(): 
                     self.audio_segs[audio] = list()
                 
-                if overlap == 'FALSE' and lang != self.silence: #and audio == 'TTS_P10040TT_VCST_ECxxx_01_AO_35259847_v001_R004_CRR_MERLIon-CCS.wav':
+                if overlap == 'FALSE' and lang != self.silence: 
                     self.audio_segs[audio].append(temp)
                            
     def read_audio_seg(self):
         # mapping file
         file_path = self.list_save_path
+
+        # clear old version
+        if os.path.exists(file_path):
+            os.remove(file_path)
 
         # read each wav file
         for recording in self.audio_segs.keys():
@@ -107,19 +88,21 @@ class label_reader(object):
 
             # do segmentation for each recorded segment
             for s in segments:
-                start, end = s["seg"]
+                t_start, t_end = s["seg"]
                 utt = s["utt"]
                 lab = s['lab']
+                w_start = int(t_start * sample_rate / 1000)
+                w_end = int(t_end * sample_rate / 1000)
 
                 # segment speech
-                seg_wav = waveform[:, int(start) : int(end)]
+                seg_wav = waveform[:, w_start : w_end]
                 seg_name = recording.replace('.wav', '') + '_' + utt +'.wav'
                 segment_path = self.seg_save_path + seg_name
                 torchaudio.save(segment_path, seg_wav, sample_rate)
 
                 # write in the file
                 with open(file_path, 'a') as file:
-                    file.write(seg_name+ ' ' + lab + '\n')
+                    file.write(seg_name+ '\t' + lab + '\n')
 
 
 if __name__ == '__main__':

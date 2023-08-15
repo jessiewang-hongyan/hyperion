@@ -84,14 +84,18 @@ def main():
         labels = le.transform(labels_text)
 
         audio2lang_txt = save_dir + '/wav2lang.txt'
-        with open(audio2lang_txt, 'w') as f:
+        # clear old version
+        if os.path.exists(audio2lang_txt):
+            os.remove(audio2lang_txt)
+
+        with open(audio2lang_txt, 'a') as f:
             for i in tqdm(range(len(audio_list))):
                 audio = audio_list[i]
                 try:
                     # upsampling_lre(audio, save_dir)
                     # save_name = save_dir+'/'+os.path.split(audio)[-1].replace('.WAV','.wav').replace('.sph','wav')
                     # f.write("{} {}\n".format(save_name, labels[i]))
-                    f.write("{} {}\n".format(audio, labels[i]))
+                    f.write("{}\t{}\n".format(audio, labels[i]))
                 except:
                     print(audio)
     if args.step <= 1:
@@ -99,15 +103,19 @@ def main():
         audio2lang_txt = save_dir + '/wav2lang.txt'
         with open(audio2lang_txt, 'r') as f:
             lines = f.readlines()
-        audio_list = [x.split()[0] for x in lines]
-        labels_list = [x.split()[1].strip() for x in lines]
+        audio_list = [x.split(sep='\t')[0] for x in lines]
+        labels_list = [x.split(sep='\t')[1].strip() for x in lines]
         audio2lang_seg_txt = save_dir + '/segment2lang.txt'
         seg_len = args.seglen
         overlap = args.overlap
         save_seg_dir = args.savedir + '/segs/'
         if not os.path.exists(save_seg_dir):
             os.mkdir(save_seg_dir)
-        with open(audio2lang_seg_txt, 'w') as f:
+
+        if os.path.exists(audio2lang_seg_txt):
+            os.remove(audio2lang_seg_txt)
+
+        with open(audio2lang_seg_txt, 'a') as f:
             for i in tqdm(range(len(audio_list))):
                 audio = audio_list[i]
                 main_name = os.path.split(audio)[-1]
@@ -128,13 +136,13 @@ def main():
                         save_name = save_seg_dir + main_name.replace('.wav', '_{}.wav'.format(ii))
                         data_seg.export(save_name, format='wav')
                         start = end - overlap
-                        f.write("{} {}\n".format(save_name, label))
+                        f.write("{}\t{}\n".format(save_name, label))
                     if remainder >= 3: # if remainder longer than 3s, keep it, otherwise throw away
                         start_ = start * 1000
                         data_seg = data_[start_:]
                         save_name = save_seg_dir + main_name.replace('.wav', '_{}.wav'.format(num_segs))
                         data_seg.export(save_name, format='wav')
-                        f.write("{} {}\n".format(save_name, label))
+                        f.write("{}\t{}\n".format(save_name, label))
                 # except:
                 #     print('Errors when segmenting')
     if args.step <= 2:
@@ -144,19 +152,23 @@ def main():
         feat2lang_txt = save_dir + '/feat2lang.txt'
         with open(audio2lang_seg_txt, 'r') as f:
             lines = f.readlines()
-        audio_list = [x.split()[0] for x in lines]
-        labels_list = [x.split()[1].strip() for x in lines]
-        with open(feat2lang_txt, 'w') as f:
+        audio_list = [x.split(sep='\t')[0] for x in lines]
+        labels_list = [x.split(sep='\t')[1].strip() for x in lines]
+
+        if os.path.exists(feat2lang_txt):
+            os.remove(feat2lang_txt)
+            
+        with open(feat2lang_txt, 'a') as f:
             for i in tqdm(range(len(audio_list))):
                 audio = audio_list[i]
                 label = labels_list[i]
                 data, sr = librosa.load(audio, sr=None)
-                print('--------------------------------')
-                print(f'librosa data size: {data.shape}')
-                print(f'data after squeeze: {torch.tensor(data).unsqueeze(0).shape}')
+                # print('--------------------------------')
+                # print(f'librosa data size: {data.shape}')
+                # print(f'data after squeeze: {torch.tensor(data).unsqueeze(0).shape}')
                 data_ = torch.tensor(data).to(device=device, dtype=torch.float).unsqueeze(0)
                 data_wav_len = torch.tensor([data_.shape[1]])
-                print(f'data_wav_len: {data_wav_len}')
+                # print(f'data_wav_len: {data_wav_len}')
 
                 # try: # To skip some too long or too short utterances
                 features = model(data_, wavs_len=data_wav_len)
@@ -165,8 +177,8 @@ def main():
                 features = features[0][args.layer].squeeze(0)
                 save_name = audio.replace(args.audiodir, args.savedir).replace('.wav', '.npy')
                 # np.save(save_name, features.squeeze(0).cpu().detach().numpy())
-                print(f'feature size: {features.shape}')
-                print(f'size after squeeze: {features.squeeze(0).shape}')
+                # print(f'feature size: {features.shape}')
+                # print(f'size after squeeze: {features.squeeze(0).shape}')
 
                 feat_shape = features.shape
                 if feat_shape[0]%20 == 0:
@@ -181,11 +193,11 @@ def main():
                     print(f"padding size: {padding_size}, new_dim0: {new_dim0}, features size: {features.shape}")
                     
                     np.save(save_name, features.cpu().detach().numpy().reshape((new_dim0, 20, feat_shape[1])))
-                    f.write(f"{save_name} {label} {new_dim0}\n")
+                    f.write(f"{save_name}\t{label}\t{new_dim0}\n")
 
-                print('--------------------------------')
+                # print('--------------------------------')
 
-                f.write(f"{save_name} {label} {int(features.squeeze(0).shape[0]/20)}\n")
+                # f.write(f"{save_name} {label} {int(features.squeeze(0).shape[0]/20)}\n")
                 # except:
                 #     print("Len:{} {} is not successful, skip this one".format(len(data) / sr, audio))
 

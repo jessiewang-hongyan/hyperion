@@ -1,36 +1,62 @@
 import os
-from sklearn.metrics import balanced_accuracy_score
+from sklearn.metrics import balanced_accuracy_score, roc_curve
+import matplotlib.pyplot as plt
+import numpy as np
 
 def get_trials(utt2lan, num_lang, output):
     with open(utt2lan, 'r') as f:
         lines = f.readlines()
     utt_list = [os.path.split(x.split(sep='\t')[0])[-1].strip('.npy') for x in lines]
 
-    lang_list = [int(x.split(sep='\t')[1].strip()) for x in lines]
+    lang_list = [x.split(sep='\t')[1].strip().replace('[', '').replace(']', '').split(sep=', ') for x in lines]
+    
+    float_lang_list = []
+    for row in lang_list:
+      float_row = []
+      for label in row:
+         if label.replace('.', '').isnumeric():
+            float_row.append(int(float(label)))
+      float_lang_list.append(float_row)
+    lang_list = float_lang_list
+
 
     targets = [i for i in range(num_lang)]
     with open(output, 'w') as f:
         for i in range(len(utt_list)):
-            target_utt = lang_list[i]
-            utt = utt_list[i]
+          for idx, j in enumerate(range(len(lang_list[i]))):
+            target_utt = lang_list[i][j]
+            utt = utt_list[i] + '-{}'.format(idx)
             for target in targets:
                 if target == target_utt:
-                    f.write("{}\t{}\ttarget\n".format(utt, target))
+                    f.write("{} {} target\n".format(utt, target))
                 else:
-                    f.write("{}\t{}\tnontarget\n".format(utt, target))
+                    f.write("{} {} nontarget\n".format(utt, target))
 
 def get_score(utt2lan, scores, num_lang, output):
     with open(utt2lan, 'r') as f:
         lines = f.readlines()
     utt_list = [os.path.split(x.split(sep='\t')[0])[-1].strip('.npy') for x in lines]
-    lang_list = [int(x.split(sep='\t')[1].strip()) for x in lines]
+    lang_list = [x.split(sep='\t')[1].strip().replace('[', '').replace(']', '').split(sep=', ') for x in lines]
+    
+    float_lang_list = []
+    for row in lang_list:
+      float_row = []
+      for label in row:
+         if label.replace('.', '').isnumeric():
+            float_row.append(int(float(label)))
+      float_lang_list.append(float_row)
+    lang_list = float_lang_list
+
+    # print(scores)
+
     targets = [i for i in range(num_lang)]
     with open(output, 'w') as f:
         for i in range(len(utt_list)):
-            score_utt = scores[i]
+          for idx, j in enumerate(range(len(scores[i]))):
             for lang_id in targets:
-                str_ = "{} {} {}\n".format(utt_list[i], lang_id, score_utt[lang_id])
-                f.write(str_)
+              score_utt = scores[i][lang_id]
+              str_ = "{} {} {}\n".format(utt_list[i]+"-{}".format(idx), lang_id, score_utt[lang_id])
+              f.write(str_)
 
 def get_langid_dict(trials):
   ''' Get lang2lang_id, utt2lang_id dicts and lang nums, lang_id starts from 0.
@@ -66,7 +92,10 @@ def process_pair_scores(scores, lang2lang_id, utt2lang_id, lang_num, trial_list)
   pairs = []
   stats = []
   lines = open(scores, 'r').readlines()
+
+  # print(trial_list)
   for line in lines:
+    # print(line.strip().split())
     utt, lang, score = line.strip().split()
     if lang + utt in trial_list:
       if utt in utt2lang_id:
@@ -161,8 +190,8 @@ def compute_cprimary(trial_txt, score_txt, p_target_1=0.5, p_target_2=0.1):
 def get_weighted_acc(outputs, truths, lang_num, ignore_idx=100):
   ''' Compute balanced accuracy.
   '''
-  outputs = outputs.flatten()
-  truths = truths.flatten()
+  # outputs = outputs.flatten()
+  # truths = truths.flatten()
   acc = list()
   weights = list()
   total = list()
@@ -175,10 +204,12 @@ def get_weighted_acc(outputs, truths, lang_num, ignore_idx=100):
     LTa.append(0)
 
   for output, truth in zip(outputs, truths):
-    if truth != ignore_idx:
-      total[truth] += 1
-      if truth == output:
-        LTa[truth] += 1    
+      t = int(truth)
+      o = int(output)
+      if t != ignore_idx:
+        total[t] += 1
+        if t == o:
+          LTa[t] += 1    
 
   total_sum = sum(total)
   for lang in range(lang_num):
@@ -190,9 +221,9 @@ def get_weighted_acc(outputs, truths, lang_num, ignore_idx=100):
 
   b_acc = 0.0
   for lang in range(lang_num):
-    b_acc = weights[lang] * acc[lang]
+    b_acc += weights[lang] * acc[lang]
 
-  print(f'Class counts: {total}, weights: {weights}, accs: {acc}')
+  # print(f'Class counts: {total}, weights: {weights}')
   return b_acc, acc, weights
 
 def compute_wacc(outputs, truths, num_langs):
@@ -201,14 +232,40 @@ def compute_wacc(outputs, truths, num_langs):
     :param score: score file
     :return: balanced accuracy
     '''
-    wacc, acc, weights = get_weighted_acc(outputs, truths, num_langs)
+    bacc, acc, weights = get_weighted_acc(outputs, truths, num_langs)
     acc = [round(a, 4) for a in acc]
     weights = [round(w, 4) for w in weights]
-    return round(wacc, 4), acc, weights
+    return round(bacc, 4), acc, weights
 
 
 def get_bacc(y_true, y_pred):
-    return round(balanced_accuracy_score(y_true, y_pred), 4)
+  return round(balanced_accuracy_score(y_true, y_pred), 4)
+
+def draw_roc(y, scores, fname, pos_labels=2):
+  # new_y = []
+  # new_scores = []
+
+  # for lab_seq, score_matrix in zip(y, scores):
+  #   for idx, y in enumerate(lab_seq):
+  #     score = score_matrix[int(y)][idx]
+  #     new_y.append(y)
+  #     new_scores.append(score)
+
+  fpr, tpr, thresholds = roc_curve(y, scores)
+  print(f'fpr: {fpr}\ntpr: {tpr}\nthresholds:{thresholds}')
+
+  plt.figure()
+  plt.xlim([0.0, 1.0])
+  plt.ylim([0.0, 1.0])
+  plt.plot(fpr, tpr, 'bo-')
+
+  x = np.arange(0.0, 1.1, 0.1)
+  y = -x + 1
+  plt.plot(x, y, '--')
+
+  plt.xlabel('FPR = 1 - speciality')
+  plt.ylabel('TPR = sensitivity')
+  plt.savefig(fname)
 
 if __name__ == "__main__":
     import subprocess

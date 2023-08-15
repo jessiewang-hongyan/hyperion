@@ -1,6 +1,6 @@
 #!/bin/bash
-#$ -N seame_merge
-#$ -j y -o /export/c12/ywang793/logs/log.seame_merge
+#$ -N pholid_clear
+#$ -j y -o /export/c12/ywang793/logs/log.pholid_clear
 #$ -M ywang793@jh.edu
 #$ -m e
 #$ -l ram_free=20G,mem_free=20G,gpu=1,hostname=d01
@@ -23,7 +23,5 @@ config_file=default_config.sh
 . parse_options.sh || exit 1;
 . datapath.sh 
 
-
-# . local/make_merlion.sh
-. local/make_seame.sh
-
+conda activate python3_9
+python ./local/delete_bydir.py

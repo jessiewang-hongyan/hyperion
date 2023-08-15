@@ -20,33 +20,73 @@ def collate_fn_atten(batch):
     batch.sort(key=lambda x: x[2], reverse=True)
     seq, labels, seq_length = zip(*batch)
     data = rnn_utils.pad_sequence(seq, batch_first=True, padding_value=0)
-    labels = torch.LongTensor(labels)
+    if not isinstance(labels[0], int):
+        # for LD
+        labels = rnn_utils.pad_sequence(labels, batch_first=True, padding_value=100)
+    else:
+        # for LID
+        labels = torch.LongTensor(labels)
+    # with open('./data_collate_log.txt', 'a') as f:
+    #     f.write("data shape: {}\t labels shape: {} \t seq_len:{} \t seq_len sum: {}\n".format(data.shape, label_padded.shape, seq_length, sum(seq_length)))
+
     return data, labels, seq_length
 
 
 
 
+# class RawFeatures(data.Dataset):
+#     def __init__(self, txt_path):
+#         with open(txt_path, 'r') as f:
+#             lines = f.readlines()
+#             self.feature_list = [i.split()[0] for i in lines]
+#             self.label_list = [i.split()[1] for i in lines]
+#             self.seq_len_list = [i.split()[2].strip() for i in lines]
+
+#     def __getitem__(self, index):
+#         feature_path = self.feature_list[index]
+#         # feature = torch.from_numpy(np.load(feature_path, allow_pickle=True))
+#         feature = torch.tensor(np.load(feature_path, allow_pickle=True).tolist())
+#         label = int(self.label_list[index])
+#         seq_len = int(self.seq_len_list[index])
+#         return feature, label, seq_len
+
+#     def __len__(self):
+#         return len(self.label_list)
+
 class RawFeatures(data.Dataset):
     def __init__(self, txt_path):
         with open(txt_path, 'r') as f:
             lines = f.readlines()
-            self.feature_list = [i.split()[0] for i in lines]
-            self.label_list = [i.split()[1] for i in lines]
-            self.seq_len_list = [i.split()[2].strip() for i in lines]
+            self.feature_list = [i.split('\t')[0] for i in lines]
+            self.label_list = [i.split('\t')[1] for i in lines]
+            self.seq_len_list = [i.split('\t')[2].strip() for i in lines]
+            self.is_seq_lab = False
 
-            # convert str labels into idx labels
-            # unique_labels = list(set(self.label_list))
-            # label_map = {label: index for index, label in enumerate(unique_labels)}
-            # transform = Lambda(lambda x: label_map[x])
-            # self.label_list = [transform(label) for label in self.label_list]
-            # print(f'type of feature:\n')
-            # print(np.load(self.feature_list[0], allow_pickle=True).tolist())
+        # for seame data
+        if '[' in self.label_list[0]:
+            self.is_seq_lab = True
+        
+        if self.is_seq_lab:
+            label_list = []
+
+            label_text = [x.strip().replace('[', '').replace(']', '') for x in self.label_list]
+            label_text = [x.split() for x in label_text]
+
+            for row in label_text:
+                label_list.append(torch.tensor([torch.tensor(float(x.replace(',', ''))) for x in row]))
+
+            self.label_list = label_list
+
+
 
     def __getitem__(self, index):
         feature_path = self.feature_list[index]
-        # feature = torch.from_numpy(np.load(feature_path, allow_pickle=True))
         feature = torch.tensor(np.load(feature_path, allow_pickle=True).tolist())
-        label = int(self.label_list[index])
+        if self.is_seq_lab:
+            label = torch.FloatTensor(self.label_list[index])
+        else:
+            label = int(self.label_list[index])
+            
         seq_len = int(self.seq_len_list[index])
         return feature, label, seq_len
 

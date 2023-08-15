@@ -42,6 +42,8 @@ def validation(valid_txt, model, model_name, device, kaldi, log_dir, num_lang):
     correct = 0
     total = 0
     scores = 0
+    preds = 0
+    truths = 0
     with torch.no_grad():
         for step, (utt, labels, seq_len) in enumerate(valid_data):
             utt = utt.to(device=device, dtype=torch.float)
@@ -52,9 +54,13 @@ def validation(valid_txt, model, model_name, device, kaldi, log_dir, num_lang):
             total += labels.size(-1)
             correct += (predicted == labels).sum().item()
             if step == 0:
-                scores = outputs
+                scores = outputs.cpu()
+                preds = predicted.cpu()
+                truths = labels.cpu()
             else:
-                scores = torch.cat((scores, outputs), dim=0)
+                scores = torch.cat((scores, outputs.cpu()), dim=0)
+                preds = torch.cat((preds, predicted.cpu()), dim=0)
+                truths = torch.cat((truths, labels.cpu()), dim=0)
     acc = correct / total
     print('Current Acc.: {:.4f} %'.format(100 * acc))
     scores = scores.squeeze().cpu().numpy()
@@ -65,12 +71,17 @@ def validation(valid_txt, model, model_name, device, kaldi, log_dir, num_lang):
     scoring.get_trials(valid_txt, num_lang, trial_txt)
     scoring.get_score(valid_txt, scores, num_lang, score_txt)
     eer_txt = trial_txt.replace('trial', 'eer')
-    subprocess.call(f"{kaldi}/egs/subtools/computeEER.sh "
+    subprocess.call(f"{kaldi}/egs/ywspeech/sre/subtools/computeEER.sh "
                     f"--write-file {eer_txt} {trial_txt} {score_txt}", shell=True)
     cavg = scoring.compute_cavg(trial_txt, score_txt)
+    wacc,accs, weights = scoring.compute_wacc(preds, truths, num_lang)
+    bacc = scoring.get_bacc(truths, preds)
+
     print("Cavg:{}".format(cavg))
-    with open(output_txt, 'w') as f:
-        f.write("ACC:{} Cavg:{}".format(acc, cavg))
+    print(f"Balanced Acc:{bacc}, Weighted Acc: {wacc}, Acc by class:{accs}, class weights:{weights}")
+    with open(output_txt, 'a') as f:
+        f.write(f'Valid set: {valid_txt}:\n')
+        f.write("ACC:{}% Cavg:{} BACC: {} WACC:{} ACC_class:{} Weight_class {}\n".format(round(acc*100, 4), cavg, bacc, wacc, accs, weights))
     return cavg
 
 
@@ -94,7 +105,7 @@ def main():
     print(f'device:{device}')
     feat_dim = config_proj["model_config"]["d_k"]
     n_heads = config_proj["model_config"]["n_heads"]
-    model = PHOLID(input_dim=config_proj["model_config"]["feat_dim"],
+    model = PHOLID_conv(input_dim=config_proj["model_config"]["feat_dim"],
                    feat_dim=config_proj["model_config"]["d_k"],
                    d_k=config_proj["model_config"]["d_k"],
                    d_v=config_proj["model_config"]["d_k"],
@@ -104,11 +115,13 @@ def main():
                    n_lang=config_proj["model_config"]["n_language"],
                    max_seq_len=10000)
 
+    # model.load_state_dict(torch.load('./models/pconv_merlion/pconv_merlion_epoch_12.ckpt'))
     model.to(device)
     model_name = config_proj["model_name"]
     print("model name: {}".format(model_name))
     log_dir = config_proj["Input"]["userroot"] + config_proj["Input"]["log"]
-    kaldi_root = config_proj["Input"]["userroot"] + config_proj["kaldi"]
+    # kaldi_root = config_proj["Input"]["userroot"] + config_proj["kaldi"]
+    kaldi_root = config_proj["kaldi"]
     if not os.path.exists(log_dir):
         os.mkdir(log_dir)
     train_txt = config_proj["Input"]["userroot"] + config_proj["Input"]["train"]
@@ -157,17 +170,15 @@ def main():
                 math.cos((step - SSL_steps - warmup) / (total_epochs * total_step - SSL_steps - warmup) * math.pi) + 1))
     scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=warm_up_with_cosine_lr)
 
-    for epoch in tqdm(range(total_epochs)):
-        # save ckpt in a folder
-        model_save_path = './models/'+model_name
+    # save ckpt in a folder
+    model_save_path = './models/'+model_name
+    if not os.path.exists(model_save_path):
         os.mkdir(model_save_path)
 
+    # training
+    for epoch in tqdm(range(total_epochs)):
         model.train()
         for step, (utt, labels, seq_len) in enumerate(train_data):
-            print('-------------------------------')
-            print(f'utt:{utt.shape}, labels:{labels.shape}, seq_len:{seq_len}')
-            print('-------------------------------')
-
             utt_ = utt.to(device=device)
             atten_mask = get_atten_mask(seq_len, utt_.size(0))
             atten_mask = atten_mask.to(device=device)
@@ -207,6 +218,9 @@ def main():
                 validation(test_txt, model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
                            num_lang=config_proj["model_config"]["n_language"])
 
+    # if valid_txt is not None:
+    #     validation(valid_txt, model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
+    #                 num_lang=config_proj["model_config"]["n_language"])
 
 if __name__ == "__main__":
     main()
