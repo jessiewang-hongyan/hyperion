@@ -26,7 +26,7 @@
     "test": "None"
   },
   "optim_config": {
-    "learning_rate": 1e-12,
+    "learning_rate": 0.0001,
     "epochs": 13,
     "batch": 128,
     "optimizer": "Adam",
