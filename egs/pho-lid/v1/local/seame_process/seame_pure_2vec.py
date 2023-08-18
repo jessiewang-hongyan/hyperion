@@ -190,7 +190,7 @@ if __name__ == "__main__":
     for dir_name in os.listdir("data/seame/"):
         file_path = "/export/fs05/ywang793/hyperion/egs/pho-lid/v1/data/seame/" + dir_name
 
-        if 'data_label_list.txt' in os.listdir(file_path+'/pure/'):
+        if dir_name != 'merge' and 'data_label_list.txt' in os.listdir(file_path+'/pure/'):
             preprocess_pipe = preprocess(
                 label_encoder=le,
                 seglen=10,
@@ -201,8 +201,8 @@ if __name__ == "__main__":
             )
 
 
-            preprocess_pipe.make_wav2lang()
-            preprocess_pipe.cut_wav_lab()
+            # preprocess_pipe.make_wav2lang()
+            # preprocess_pipe.cut_wav_lab()
             preprocess_pipe.extract_wav2vec()
             print(file_path + ' Done.')
 

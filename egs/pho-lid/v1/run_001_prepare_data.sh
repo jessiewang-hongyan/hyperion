@@ -1,6 +1,6 @@
 #!/bin/bash
-#$ -N seame_mix2vec
-#$ -j y -o /export/c12/ywang793/logs/log.seame_mix2vec
+#$ -N seame_pure2vec
+#$ -j y -o /export/c12/ywang793/logs/log.seame_pure2vec
 #$ -M ywang793@jh.edu
 #$ -m e
 #$ -l ram_free=20G,mem_free=20G,gpu=1,hostname=d01
