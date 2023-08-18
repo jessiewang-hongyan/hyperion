@@ -28,14 +28,14 @@ conda activate python3_9
 # python ./local/seame_process/sampling.py
 
 # step 3: convert pure-lang segs into vectors for pholid-conv training
-# python ./local/seame_process/seame_pure_2vec.py
+python ./local/seame_process/seame_pure_2vec.py
 
 # step 4: convert mixed-lang segs into vectors for clf training
 # python ./local/seame_process/seame_mix_2vec.py
 
 # step 5: split into train and test according to speakers
 # python ./local/seame_process/seame_spk_split.py
-python ./local/seame_process/seame_merge.py
+# python ./local/seame_process/seame_merge.py
 
 
 # remove duplicated lines
