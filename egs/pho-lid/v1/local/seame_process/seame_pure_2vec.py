@@ -191,30 +191,27 @@ if __name__ == "__main__":
         file_path = "/export/fs05/ywang793/hyperion/egs/pho-lid/v1/data/seame/" + dir_name
 
         if dir_name != 'merge' and 'data_label_list.txt' in os.listdir(file_path+'/pure/'):
-            if not os.path.exists(file_path+'/pure/feat2lang.txt'):
-                preprocess_pipe = preprocess(
-                    label_encoder=le,
-                    seglen=10,
-                    overlap=1,
-                    lredir= file_path + '/pure/',
-                    savedir= file_path + '/pure/',
-                    audiodir= file_path + '/pure/',
-                )
-            # else:
-            #     with open(file_path+'/pure/feat2lang.txt', 'r') as f:
-            #         lines = f.readlines()
-            #     npy_names = [x.split(sep='\t') for x in lines]
-            #     for name in npy_names:
-            #         if not os.path.exists(file_path+'/pure/'+name):
+            if os.path.exists(file_path+'/pure/feat2lang.txt'):
+                need_2vec = True
+                for fname in os.listdir(file_path+'/pure/'):
+                    if fname.endswith('.npy'):
+                        need_2vec = True
+                if need_2vec:
+                    preprocess_pipe = preprocess(
+                        label_encoder=le,
+                        seglen=10,
+                        overlap=1,
+                        lredir= file_path + '/pure/',
+                        savedir= file_path + '/pure/',
+                        audiodir= file_path + '/pure/',
+                    )
 
-
-
-                # preprocess_pipe.make_wav2lang()
-                # preprocess_pipe.cut_wav_lab()
-                preprocess_pipe.extract_wav2vec()
-                print(file_path + ' Done.')
-            else:
-                print(f'No changes to {file_path}')
+                    # preprocess_pipe.make_wav2lang()
+                    # preprocess_pipe.cut_wav_lab()
+                    preprocess_pipe.extract_wav2vec()
+                    print(file_path + ' Done.')
+                else:
+                    print(f'No changes to {file_path}')
 
     print('Pure seg2vec process done.')
     
