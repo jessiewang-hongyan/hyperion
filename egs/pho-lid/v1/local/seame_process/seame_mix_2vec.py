@@ -205,7 +205,7 @@ if __name__ == "__main__":
 
     for dir in os.listdir("data/seame/"):
         file_path = "/export/fs05/ywang793/hyperion/egs/pho-lid/v1/data/seame/" + dir
-        if 'segment2lang.txt' in os.listdir(file_path+'/processed/'):
+        if dir != 'merge' and 'segment2lang.txt' in os.listdir(file_path+'/processed/'):
             preprocess_pipe = preprocess(
                 seglen=10,
                 overlap=1,
