@@ -13,7 +13,7 @@ if __name__ == '__main__':
         test_spks = f.readlines()
     test_spks = [x.strip() for x in test_spks]
 
-    merged_dir = './data/seame/merge/'
+    merged_dir = './data/seame_new/merge/'
     for folder_path in [merged_dir, merged_dir + '/cat/', merged_dir + '/pure/']:
         if not os.path.exists(folder_path):
             os.mkdir(folder_path)
@@ -28,9 +28,9 @@ if __name__ == '__main__':
         if os.path.exists(file_name):
             os.remove(file_name)
 
-    for dir_name in os.listdir("data/seame/"):
+    for dir_name in os.listdir("data/seame_new/"):
         if not dir_name == 'merge':
-            file_path = "/export/fs05/ywang793/hyperion/egs/pho-lid/v1/data/seame/" + dir_name
+            file_path = "/export/fs05/ywang793/hyperion/egs/pho-lid/v1/data/seame_new/" + dir_name
             
             if dir_name in train_spks:
                 merged_pure_txt = merged_pure_txt_train

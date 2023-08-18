@@ -151,7 +151,7 @@ class preprocess():
                     data, sr = torchaudio.load(audio)
                     data_ = data.to(device=self.device, dtype=torch.float).reshape(-1, 1)
                     data_wav_len = torch.tensor([data_.shape[1]])
-
+                    self.model.eval()
                     features = self.model(data_, wavs_len=data_wav_len)
                     # print(features)
                 

@@ -18,7 +18,7 @@ class label_reader(object):
                  list_save_path='/data_label_list.txt', 
                  silence='NON_SPEECH', 
                  absolute_path=False, 
-                 save_root='/export/fs05/ywang793/hyperion/egs/pho-lid/v1/data/seame/',
+                 save_root='/export/fs05/ywang793/hyperion/egs/pho-lid/v1/data/seame_new/',
                  sample_rate=16000):
         super().__init__()
         self.audio_path = audio_path
@@ -115,7 +115,7 @@ if __name__ == '__main__':
     for recording_type in data_list:
         audio_label_path = dataset_root + recording_type + label_list
 
-        save_parent = '/export/fs05/ywang793/hyperion/egs/pho-lid/v1/data/seame/'
+        save_parent = '/export/fs05/ywang793/hyperion/egs/pho-lid/v1/data/seame_new/'
 
         for file in os.listdir(audio_label_path):
             filename = file.replace('.txt', '')
@@ -137,4 +137,4 @@ if __name__ == '__main__':
                 reader.get_seg()
                 reader.read_audio_seg()
 
-    print('SEAME seg done.')
+    print('SEAME_new seg done.')

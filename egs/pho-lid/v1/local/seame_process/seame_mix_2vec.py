@@ -166,7 +166,9 @@ class preprocess():
                 # data_ = torch.tensor(data).to(device=self.device, dtype=torch.float).unsqueeze(0)
                 data_ = data.to(device=self.device, dtype=torch.float).reshape(1, -1)
                 data_wav_len = torch.tensor([data_.shape[1]])
-                print(f'data: {data_.shape}, data_len: {data_wav_len}')
+                # print(f'data: {data_.shape}, data_len: {data_wav_len}')
+                
+                self.model.eval()
                 features = self.model(data_, wavs_len=data_wav_len)
                 # print(features)
               
@@ -203,7 +205,7 @@ if __name__ == "__main__":
 
     for dir in os.listdir("data/seame/"):
         file_path = "/export/fs05/ywang793/hyperion/egs/pho-lid/v1/data/seame/" + dir
-        if 'data_label_list.txt' in os.listdir(file_path+'/cat/'):
+        if 'segment2lang.txt' in os.listdir(file_path+'/processed/'):
             preprocess_pipe = preprocess(
                 seglen=10,
                 overlap=1,
@@ -212,8 +214,8 @@ if __name__ == "__main__":
                 audiodir= file_path + '/cat/'
             )
 
-            preprocess_pipe.make_wav2lang()
-            preprocess_pipe.cut_wav_lab()
+            # preprocess_pipe.make_wav2lang()
+            # preprocess_pipe.cut_wav_lab()
             preprocess_pipe.extract_wav2vec()
 
             print(f'Folder {dir} done.')

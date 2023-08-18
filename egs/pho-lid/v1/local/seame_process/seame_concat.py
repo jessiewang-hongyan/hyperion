@@ -150,11 +150,11 @@ class cs_concat():
 
 
 if __name__ == '__main__':
-    mix_concat_num = 50
-    pure_concat_num = 50
+    mix_concat_num = 10
+    pure_concat_num = 10
     
-    for dir_name in os.listdir("data/seame/"):
-        file_path = "data/seame/" + dir_name
+    for dir_name in os.listdir("data/seame_new/"):
+        file_path = "data/seame_new/" + dir_name
 
         if os.path.exists(file_path +'/data_label_list.txt'):
             concat = cs_concat(dir_name=file_path)
@@ -172,15 +172,15 @@ if __name__ == '__main__':
                 # generate longer pure audio
                 # if not os.path.exists(concat.dir + "/data_label_list_old.txt"):
                 
-                # for i in range(mix_concat_num):
-                #     concat.concat_random(ratio=[0.5, 0.5])
+                for i in range(mix_concat_num):
+                    concat.concat_random(ratio=[0.5, 0.5])
 
                 lang_list = concat.lists_by_lang
                 num_lang_0 = len(lang_list[0])
                 num_lang_1 = len(lang_list[1])
 
-                gen_lang_0_samples = pure_concat_num if num_lang_0 > 15 else 10
-                gen_lang_1_samples = pure_concat_num if num_lang_1 > 15 else 10
+                gen_lang_0_samples = pure_concat_num if num_lang_0 > 15 else 2
+                gen_lang_1_samples = pure_concat_num if num_lang_1 > 15 else 2
                 for i in range(gen_lang_0_samples):
                     concat.concat_pure(min_time_len=30000, lang_lab=0)
                 for i in range(gen_lang_1_samples):

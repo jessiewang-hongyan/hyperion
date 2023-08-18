@@ -192,6 +192,11 @@ def main():
             # Forward pass
             outputs, phonemes = model(utt_, seq_len, mean_mask_, weight_mean, std_mask_, weight_unbaised,
                                     atten_mask=atten_mask)
+
+            print(f'inputs: {utt}')
+            print(f'outputs: {outputs}')
+            print(f'phonemes: {phonemes}')
+
             # Backward and optimize
             if epoch < SSL_epochs:
                 loss_phn = loss_func_phn(phonemes, seq_len)
