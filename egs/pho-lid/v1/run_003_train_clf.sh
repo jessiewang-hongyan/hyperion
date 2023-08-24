@@ -29,7 +29,7 @@ source ~/.bashrc
 # for b and c machines, cuda version 10.2
 # conda activate merlion
 # the env for d01 machine
-conda activate python3_9
+conda activate merlion4d01
 
 
 python train_clf.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_seame_pconv.json

@@ -1,7 +1,7 @@
 import os
 import glob
 import torch
-# import librosa
+import librosa
 import argparse
 import subprocess
 import numpy as np
@@ -13,17 +13,6 @@ import torch.nn.functional as F
 import math
 import torchaudio
 
-# def upsampling_lre(audio, save_dir):
-#     # if audio.endswith('.sph'):
-#     #     data, sr = librosa.load(audio, sr=None)
-#     #     new_name = save_dir + '/' + os.path.split(audio)[-1].replace('.sph', '.wav')
-#     #     sf.write(new_name, data, 8000, subtype='PCM_16')
-#     #     subprocess.call(f"sox {audio} -r 16000 {new_name}", shell=True)
-#     # el
-#     if audio.endswith('.wav') or audio.endswith('.WAV'):
-#         new_name = save_dir + '/' + os.path.split(audio)[-1].replace('.WAV', '.wav')
-#         subprocess.call(f"sox {audio} -r 16000 {new_name}", shell=True)
-
 class preprocess():
     def __init__(self, lredir, model='xlsr_53', device=0, layer=16, 
                  seglen=10, overlap=1, savedir=None, audiodir=None):
@@ -33,12 +22,13 @@ class preprocess():
         self.savedir = savedir
         self.audiodir = audiodir
         self.layer = layer
+        self.model = model
 
-        self.device = torch.device('cuda'.format(device) if torch.cuda.is_available() else 'cpu')
-        # self.device = torch.device('cuda:{}'.format(device) if torch.cuda.is_available() else 'cpu')
-        self.model = S3PRLUpstream(model)
-        self.model.to(device)
-        self.model.eval()
+        # self.device = torch.device('cuda'.format(device) if torch.cuda.is_available() else 'cpu')
+        self.device = torch.device('cuda:{}'.format(device) if torch.cuda.is_available() else 'cpu')
+        # self.model = S3PRLUpstream(model)
+        # self.model.to(device)
+        # self.model.eval()
 
         if not os.path.exists(savedir):
             os.mkdir(savedir)
@@ -94,9 +84,9 @@ class preprocess():
                 main_name = os.path.split(audio)[-1]
                 label = labels_list[i]
                 
-                # audio_length = librosa.get_duration(path=audio)
-                waveform, sr = torchaudio.load(audio)
-                audio_length = waveform.shape[-1] / sr
+                audio_length = librosa.get_duration(path=audio)
+                # waveform, sr = torchaudio.load(audio)
+                # audio_length = waveform.shape[-1] / sr
                 data_ = AudioSegment.from_file(audio, "wav")
                 # print(f'waveform: {waveform.shape}, audio_len: {audio_length}, data_shape: {len(data_)}')
 
@@ -161,10 +151,10 @@ class preprocess():
                 audio = audio_list[i]
                 label = labels_list[i]
                 # print(f'label length in step2: {len(label)}')
-                # data, sr = librosa.load(audio, sr=None)
-                data, sr = torchaudio.load(audio)
-                # data_ = torch.tensor(data).to(device=self.device, dtype=torch.float).unsqueeze(0)
-                data_ = data.to(device=self.device, dtype=torch.float).reshape(1, -1)
+                data, sr = librosa.load(audio, sr=None)
+                # data, sr = torchaudio.load(audio)
+                data_ = torch.tensor(data).to(device=self.device, dtype=torch.float).unsqueeze(0)
+                # data_ = data.to(device=self.device, dtype=torch.float).reshape(1, -1)
                 data_wav_len = torch.tensor([data_.shape[1]])
                 # print(f'data: {data_.shape}, data_len: {data_wav_len}')
                 
@@ -202,11 +192,19 @@ class preprocess():
                 # f.write(f"{save_name}\t{label}\t{int(features.squeeze(0).shape[0]/20)}")
 
 if __name__ == "__main__":
+    device = torch.device('cuda:{}'.format(0) if torch.cuda.is_available() else 'cpu')
+    model = S3PRLUpstream('xlsr_53')
+    model.to(device)
+    model.eval()
 
-    for dir in os.listdir("data/seame/"):
-        file_path = "/export/fs05/ywang793/hyperion/egs/pho-lid/v1/data/seame/" + dir
-        if dir != 'merge' and 'segment2lang.txt' in os.listdir(file_path+'/processed/'):
+    # need_list = ['UI26MAZ_0104', 'NI02FAX_0101', 'UI14MAZ_0104', 'UI15FAZ_0104', 'UI07FAZ_0102', 'NI50FBQ_0101', 'UI10FAZ_0103', 'UI14MAZ_0105', 'UI04FAZ_0105', 'UI05MAZ_0105', 'UI04FAZ_0101', 'NI52MBQ_0101', 'NI01MAX_0101']
+    # for dir in need_list:
+
+    for dir_name in os.listdir("data/seame/"):
+        file_path = "/export/fs05/ywang793/hyperion/egs/pho-lid/v1/data/seame/" + dir_name
+        if 'data_label_list.txt' in os.listdir(file_path+'/cat/'):
             preprocess_pipe = preprocess(
+                model=model,
                 seglen=10,
                 overlap=1,
                 lredir= file_path + '/cat/',
@@ -214,11 +212,12 @@ if __name__ == "__main__":
                 audiodir= file_path + '/cat/'
             )
 
-            # preprocess_pipe.make_wav2lang()
-            # preprocess_pipe.cut_wav_lab()
+            preprocess_pipe.make_wav2lang()
+            preprocess_pipe.cut_wav_lab()
             preprocess_pipe.extract_wav2vec()
 
-            print(f'Folder {dir} done.')
+            print(f'Folder {file_path}/cat done.')
         else:
-            print(f'No qualified data need processing in folder {dir}.')
+            print(f'No data_label_list file in {file_path}/cat')
+
     print('Mixed cat2vec process done.')

@@ -5,7 +5,7 @@ import csv
 import torch
 import torchaudio
 import librosa
-# import soundfile as sf
+import soundfile
 import subprocess
 import random
 
@@ -18,7 +18,7 @@ class label_reader(object):
                  list_save_path='/data_label_list.txt', 
                  silence='NON_SPEECH', 
                  absolute_path=False, 
-                 save_root='/export/fs05/ywang793/hyperion/egs/pho-lid/v1/data/seame_new/',
+                 save_root='/export/fs05/ywang793/hyperion/egs/pho-lid/v1/data/seame/',
                  sample_rate=16000):
         super().__init__()
         self.audio_path = audio_path
@@ -39,12 +39,24 @@ class label_reader(object):
         #     sf.write(new_name, data, 8000, subtype='PCM_16')
         #     subprocess.call(f"sox {audio} -r {self.sample_rate} {new_name}", shell=True)
         # el
+        # if audio.endswith('.wav') or audio.endswith('.WAV'):
+        #     new_name = save_dir + '/' + os.path.split(audio)[-1].replace('.WAV', '.wav')
+        #     subprocess.call(f"sox \"{audio}\" -r {self.sample_rate} \"{new_name}\"", shell=True)
+        # elif audio.endswith('.flac'):
+        #     new_name = save_dir + '/' + os.path.split(audio)[-1].replace('.flac', '.wav')
+        #     subprocess.call(f"sox \"{audio}\" -r {self.sample_rate} \"{new_name}\"", shell=True)
+        
         if audio.endswith('.wav') or audio.endswith('.WAV'):
             new_name = save_dir + '/' + os.path.split(audio)[-1].replace('.WAV', '.wav')
-            subprocess.call(f"sox \"{audio}\" -r {self.sample_rate} \"{new_name}\"", shell=True)
+            # subprocess.call(f"sox \"{audio}\" -r {self.sample_rate} \"{new_name}\"", shell=True)
+            data, sr = librosa.load(audio, sr=None)
+            soundfile.write(new_name, data, 16000, subtype='PCM_16')
+
         elif audio.endswith('.flac'):
             new_name = save_dir + '/' + os.path.split(audio)[-1].replace('.flac', '.wav')
-            subprocess.call(f"sox \"{audio}\" -r {self.sample_rate} \"{new_name}\"", shell=True)
+            # subprocess.call(f"sox \"{audio}\" -r {self.sample_rate} \"{new_name}\"", shell=True)
+            data, sr = librosa.load(audio, sr=None)
+            soundfile.write(new_name, data, 16000, subtype='PCM_16')
         
         print(audio)
         print(new_name)
@@ -99,7 +111,7 @@ class label_reader(object):
                 seg_wav = waveform[:, w_start : w_end]
                 seg_name = recording.replace('.wav', '') + '_' + utt +'.wav'
                 segment_path = self.seg_save_path + seg_name
-                torchaudio.save(segment_path, seg_wav, sample_rate)
+                torchaudio.save(segment_path, seg_wav, sample_rate, bits_per_sample=16)
 
                 # write in the file
                 with open(file_path, 'a') as file:
@@ -115,7 +127,7 @@ if __name__ == '__main__':
     for recording_type in data_list:
         audio_label_path = dataset_root + recording_type + label_list
 
-        save_parent = '/export/fs05/ywang793/hyperion/egs/pho-lid/v1/data/seame_new/'
+        save_parent = '/export/fs05/ywang793/hyperion/egs/pho-lid/v1/data/seame/'
 
         for file in os.listdir(audio_label_path):
             filename = file.replace('.txt', '')
@@ -129,6 +141,7 @@ if __name__ == '__main__':
                 os.mkdir(save_parent+filename+'/processed')
                 os.mkdir(save_parent+filename+'/cat')
                 os.mkdir(save_parent+filename+'/pure')
+                os.mkdir(save_parent+filename+'/pure_processed')
 
                 reader = label_reader(
                     audio_path, 
@@ -137,4 +150,4 @@ if __name__ == '__main__':
                 reader.get_seg()
                 reader.read_audio_seg()
 
-    print('SEAME_new seg done.')
+    print('SEAME seg done.')

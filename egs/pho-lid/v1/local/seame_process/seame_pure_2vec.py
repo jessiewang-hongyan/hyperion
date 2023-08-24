@@ -1,7 +1,7 @@
 import os
 import glob
 import torch
-# import librosa
+import librosa
 import argparse
 import subprocess
 import numpy as np
@@ -13,17 +13,6 @@ from s3prl.nn import S3PRLUpstream
 import torch.nn.functional as F
 import torchaudio
 
-# def upsampling_lre(audio, save_dir):
-#     # if audio.endswith('.sph'):
-#     #     data, sr = librosa.load(audio, sr=None)
-#     #     new_name = save_dir + '/' + os.path.split(audio)[-1].replace('.sph', '.wav')
-#     #     sf.write(new_name, data, 8000, subtype='PCM_16')
-#     #     subprocess.call(f"sox {audio} -r 16000 {new_name}", shell=True)
-#     # el
-#     if audio.endswith('.wav') or audio.endswith('.WAV'):
-#         new_name = save_dir + '/' + os.path.split(audio)[-1].replace('.WAV', '.wav')
-#         subprocess.call(f"sox {audio} -r 16000 {new_name}", shell=True)
-
 class preprocess():
     def __init__(self, lredir, label_encoder, model='xlsr_53', device=0, layer=16, 
                  seglen=10, overlap=1, savedir=None, audiodir=None):
@@ -34,11 +23,12 @@ class preprocess():
         self.audiodir = audiodir
         self.layer = layer
         self.le = label_encoder
+        self.model = model
 
         self.device = torch.device('cuda:{}'.format(device) if torch.cuda.is_available() else 'cpu')
-        self.model = S3PRLUpstream(model)
-        self.model.to(device)
-        self.model.eval()
+        # self.model = S3PRLUpstream(model)
+        # self.model.to(device)
+        # self.model.eval()
 
         if not os.path.exists(savedir):
             os.mkdir(savedir)
@@ -95,9 +85,9 @@ class preprocess():
                 main_name = os.path.split(audio)[-1]
                 label = labels_list[i]
                 
-                # audio_length = librosa.get_duration(path=audio)
-                waveform, sr = torchaudio.load(audio)
-                audio_length = waveform.shape[-1] / sr
+                audio_length = librosa.get_duration(path=audio)
+                # waveform, sr = torchaudio.load(audio)
+                # audio_length = waveform.shape[-1] / sr
                 data_ = AudioSegment.from_file(audio, "wav")
                 num_segs = (audio_length - self.overlap) // (self.seglen - self.overlap)
                 remainder = (audio_length - self.overlap) % (self.seglen - self.overlap)
@@ -147,9 +137,10 @@ class preprocess():
                     audio = audio_list[i]
                     label = labels_list[i]
                     # print(f'label length in step2: {len(label)}')
-                    # data, sr = librosa.load(audio, sr=None)
-                    data, sr = torchaudio.load(audio)
-                    data_ = data.to(device=self.device, dtype=torch.float).reshape(-1, 1)
+                    data, sr = librosa.load(audio, sr=None)
+                    data_ = torch.tensor(data).to(device=self.device, dtype=torch.float).unsqueeze(0)
+                    # data, sr = torchaudio.load(audio)
+                    # data_ = data.to(device=self.device, dtype=torch.float).reshape(-1, 1)
                     data_wav_len = torch.tensor([data_.shape[1]])
                     self.model.eval()
                     features = self.model(data_, wavs_len=data_wav_len)
@@ -175,8 +166,8 @@ class preprocess():
                         np.save(save_name, features.cpu().detach().numpy().reshape((new_dim0, 20, feat_shape[1])))
                         # f.write(f"{save_name}\t{label.strip()}\t{new_dim0}\n")
 
-                    if len(label) < new_dim0:
-                        label = label + [pad_idx]*(new_dim0 - len(label))
+                    # if len(label) < new_dim0:
+                    #     label = label + [pad_idx]*(new_dim0 - len(label))
 
                     f.write(f"{save_name}\t{label.strip()}\t{new_dim0}\n")
 
@@ -187,31 +178,36 @@ if __name__ == "__main__":
     le = LabelEncoder()
     le.fit(lang_list)
 
+    device = torch.device('cuda:{}'.format(0) if torch.cuda.is_available() else 'cpu')
+    model = S3PRLUpstream('xlsr_53')
+    model.to(device)
+    model.eval()
+
     for dir_name in os.listdir("data/seame/"):
         file_path = "/export/fs05/ywang793/hyperion/egs/pho-lid/v1/data/seame/" + dir_name
+        if 'data_label_list.txt' in os.listdir(file_path+'/pure/'):
+            # if not os.path.exists(file_path+'/pure_processed/'):
+            #     os.mkdir(file_path+'/pure_processed/')
 
-        if dir_name != 'merge' and 'data_label_list.txt' in os.listdir(file_path+'/pure/'):
-            if os.path.exists(file_path+'/pure/feat2lang.txt'):
-                need_2vec = True
-                for fname in os.listdir(file_path+'/pure/'):
-                    if fname.endswith('.npy'):
-                        need_2vec = True
-                if need_2vec:
-                    preprocess_pipe = preprocess(
-                        label_encoder=le,
-                        seglen=10,
-                        overlap=1,
-                        lredir= file_path + '/pure/',
-                        savedir= file_path + '/pure/',
-                        audiodir= file_path + '/pure/',
-                    )
+            preprocess_pipe = preprocess(
+                model=model,
+                label_encoder=le,
+                seglen=10,
+                overlap=1,
+                lredir= file_path + '/pure/',
+                savedir= file_path + '/pure_processed/',
+                audiodir= file_path + '/pure/',
+            )
 
-                    # preprocess_pipe.make_wav2lang()
-                    # preprocess_pipe.cut_wav_lab()
-                    preprocess_pipe.extract_wav2vec()
-                    print(file_path + ' Done.')
-                else:
-                    print(f'No changes to {file_path}')
+            preprocess_pipe.make_wav2lang()
+            preprocess_pipe.cut_wav_lab()
+            preprocess_pipe.extract_wav2vec()
+            print(file_path + ' Done.')
+        else:
+            print(f'No data_label_list file in {file_path}/pure')
 
     print('Pure seg2vec process done.')
     
+
+    # need_list = ['UI26MAZ_0104', 'NI02FAX_0101', 'UI14MAZ_0104', 'UI15FAZ_0104', 'UI07FAZ_0102', 'NI50FBQ_0101', 'UI10FAZ_0103', 'UI14MAZ_0105', 'UI04FAZ_0105', 'UI05MAZ_0105', 'UI21MAZ_0104', 'UI28FAZ_0104', 'NI64FBQ_0101', '20NC40FBQ_0101', 'NI61FBP_0101', '05NC09FAX_0101', 'UI12FAZ_0103', '03NC05FAX_0101', 'NI09FBP_0101', 'UI10FAZ_0102', 'NI05MBQ_0101', 'UI19MAZ_0102', '33NC37MBP_0101', '04NC07FBX_0101', '45NC22MBQ_0101', 'NI23FBQ_0101', '21NC42MBQ_0101', '05NC10MAY_0201', 'NI26FBP_0101', 'NI22FBP_0101', 'UI01FAZ_0105', 'UI02FAZ_0104', '30NC48FBP_0101', 'NI43FBP_0101', 'UI09MAZ_0101', '27NC47MBQ_0101', 'UI04FAZ_0101', 'UI05MAZ_0101', 'NI42FBQ_0101', '30NC49FBQ_0101', 'NI46FBQ_0101', 'UI25FAZ_0104', 'UI27FAZ_0101', 'UI17FAZ_0103', 'UI23FAZ_0101', 'UI13FAZ_0103', 'UI20MAZ_0104', 'UI22MAZ_0101', 'UI29FAZ_0104', 'UI16MAZ_0103', 'NI65MBP_0101', 'UI26MAZ_0101', 'UI24MAZ_0104', '14NC28MBQ_0101', 'UI20MAZ_0103', 'NI57FBQ_0101', 'UI29FAZ_0103', 'UI16MAZ_0104', 'UI14MAZ_0101', 'UI24MAZ_0103', 'UI25FAZ_0103', 'UI15FAZ_0101', 'UI17FAZ_0104', 'NI52MBQ_0101', 'NI08FBP_0201', 'UI18MAZ_0101', 'UI13FAZ_0104', 'UI11FAZ_0101', 'NI01MAX_0101', 'UI02FAZ_0103', '08NC15MBP_0101', '17NC33FBP_0101', '33NC43FBQ_0101', '02NC03FBX_0201', 'UI01FAZ_0108', 'NI10FBP_0101', 'UI08MAZ_0102', '20NC39MBP_0101', '22NC44MBQ_0101', 'NI15FBQ_0101', 'UI10FAZ_0105', '19NC38FBQ_0101', 'UI19MAZ_0105', '16NC31FBP_0101', '12NC24FBQ_0101', 'NI32FBQ_0101', '05NC09FAX_0201']
+    # for dir_name in need_list:

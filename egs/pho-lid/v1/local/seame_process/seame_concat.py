@@ -60,7 +60,7 @@ class cs_concat():
         seg_wav = waveform[:, 0 : sameple_len]
         return seg_wav
     
-    def concat_pure(self, min_time_len=30000, lang_lab=0, label_time=400):
+    def concat_pure(self, min_time_len=30000, lang_lab=0):
         selected_segs = []
         audio_lists = []
         dummy_label_list = []
@@ -89,7 +89,7 @@ class cs_concat():
         cat_waveform, _ = self.concatenate_audio_segments(audio_lists, dummy_label_list)
         filename = self.dir.split('/')[-1]
         cat_save_path = self.dir + self.pure_dir + '/' + filename + '_pure' + utt_code + '.wav'
-        torchaudio.save(cat_save_path, cat_waveform, sr)
+        torchaudio.save(cat_save_path, cat_waveform, sr, bits_per_sample=16)
 
         # write in the file
         save_data_lab_path = self.dir + self.pure_dir + '/data_label_list.txt'
@@ -138,7 +138,7 @@ class cs_concat():
         cat_waveform, cat_lab = self.concatenate_audio_segments(audio_lists, label_lists)
         filename = self.dir.split('/')[-1]
         cat_save_path = self.dir + self.save_dir + '/' + filename + '_cat' + utt_code + '.wav'
-        torchaudio.save(cat_save_path, cat_waveform, sr)
+        torchaudio.save(cat_save_path, cat_waveform, sr, bits_per_sample=16)
 
         # write in the file
         save_data_lab_path = self.dir + self.save_dir + '/' + self.data_label_list
@@ -153,8 +153,8 @@ if __name__ == '__main__':
     mix_concat_num = 10
     pure_concat_num = 10
     
-    for dir_name in os.listdir("data/seame_new/"):
-        file_path = "data/seame_new/" + dir_name
+    for dir_name in os.listdir("data/seame/"):
+        file_path = "data/seame/" + dir_name
 
         if os.path.exists(file_path +'/data_label_list.txt'):
             concat = cs_concat(dir_name=file_path)

@@ -65,12 +65,12 @@ def validation_clf(valid_txt, pho_model, clf, model_name, device, kaldi, log_dir
             else:
                 transformed_label = clf.convert_lab(labels, ignore_idx=100)
 
-            # if transformed_label.shape[0] != predicted.shape[0]:
-            #     continue
-            
+            correct_len = embeddings.shape[1]
+            transformed_label = transformed_label[0][:correct_len]
+            predicted = predicted[:correct_len]
+            # print(f'truth: {transformed_label.shape}: {transformed_label}')
+            # print(f'preds: {predicted.shape}: {predicted}')
             total += transformed_label.size(-1) - (transformed_label == ignore_idx).sum().item()
-            print(f'truth: {transformed_label.shape}: {transformed_label}')
-            print(f'preds: {predicted.shape}: {predicted}')
 
             correct += (predicted.cpu() == transformed_label.cpu()).sum().item()
 

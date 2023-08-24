@@ -27,9 +27,10 @@ mkdir -p ./models
 
 source ~/.bashrc
 # conda activate merlion
-conda activate python3_9
+# conda activate python3_9
 # conda activate cuda11
+conda activate merlion4d01
 
-python train_PHOLID.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_seame_pconv.json
+# python train_PHOLID.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_seame_pconv.json
+python test_PHOLID.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_seame_pconv.json
 
-# past "learning_rate": 0.0001,

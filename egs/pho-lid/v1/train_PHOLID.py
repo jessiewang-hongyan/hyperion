@@ -9,6 +9,7 @@ import argparse
 import os
 from torch.utils.data import DataLoader
 from tqdm import tqdm
+from scoring_ld import draw_roc
 
 
 def setup_seed(seed):
@@ -42,6 +43,7 @@ def validation(valid_txt, model, model_name, device, kaldi, log_dir, num_lang):
     correct = 0
     total = 0
     scores = 0
+    score_pos = []
     preds = 0
     truths = 0
     with torch.no_grad():
@@ -53,12 +55,16 @@ def validation(valid_txt, model, model_name, device, kaldi, log_dir, num_lang):
             predicted = torch.argmax(outputs, -1)
             total += labels.size(-1)
             correct += (predicted == labels).sum().item()
+            # print(f'score_pos: {score_pos}')
+
             if step == 0:
                 scores = outputs.cpu()
+                score_pos.append(scores[0][1].item())
                 preds = predicted.cpu()
                 truths = labels.cpu()
             else:
                 scores = torch.cat((scores, outputs.cpu()), dim=0)
+                score_pos.append(scores[0][1].item())
                 preds = torch.cat((preds, predicted.cpu()), dim=0)
                 truths = torch.cat((truths, labels.cpu()), dim=0)
     acc = correct / total
@@ -77,6 +83,8 @@ def validation(valid_txt, model, model_name, device, kaldi, log_dir, num_lang):
     wacc,accs, weights = scoring.compute_wacc(preds, truths, num_lang)
     bacc = scoring.get_bacc(truths, preds)
 
+    truths = truths.flatten()
+    draw_roc(truths, score_pos, fname=model_name)
     print("Cavg:{}".format(cavg))
     print(f"Balanced Acc:{bacc}, Weighted Acc: {wacc}, Acc by class:{accs}, class weights:{weights}")
     with open(output_txt, 'a') as f:
@@ -115,7 +123,7 @@ def main():
                    n_lang=config_proj["model_config"]["n_language"],
                    max_seq_len=10000)
 
-    # model.load_state_dict(torch.load('./models/pconv_merlion/pconv_merlion_epoch_12.ckpt'))
+    # model.load_state_dict(torch.load('./models/pconv_seame/pconv_seame_epoch_12.ckpt'))
     model.to(device)
     model_name = config_proj["model_name"]
     print("model name: {}".format(model_name))
