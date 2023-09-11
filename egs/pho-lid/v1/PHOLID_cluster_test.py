@@ -61,14 +61,15 @@ def validation(valid_txt, model, model_name, device, kaldi, log_dir, num_lang, l
 
             score_0 = F.cosine_similarity(embeddings, lang_vecs[0, :], dim=0)
             score_1 = F.cosine_similarity(embeddings, lang_vecs[1, :], dim=0)
-            print(f'embeddings shape: {embeddings.shape} lang_vec shape: {lang_vecs.shape} score_0: {score_0.shape}')
+            # print(f'embeddings shape: {embeddings.shape} lang_vec shape: {lang_vecs.shape} score_0: {score_0.shape}')
 
             
             outputs = torch.stack((score_0, score_1))
-            print(outputs.shape)
+            outputs = torch.transpose(outputs, 0, 1)
+            # print(outputs.shape)
 
             predicted = torch.argmax(outputs, -1)
-            print(f'embeddings shape: {embeddings.shape} outputs shape: {outputs.shape} lang_vec shape: {lang_vecs.shape} predicted shape: {predicted.shape}')
+            # print(f'embeddings shape: {embeddings.shape} outputs shape: {outputs.shape} lang_vec shape: {lang_vecs.shape} predicted shape: {predicted.shape}')
 
             labels = labels.squeeze()
             predicted = predicted.squeeze()
@@ -88,9 +89,6 @@ def validation(valid_txt, model, model_name, device, kaldi, log_dir, num_lang, l
                 labels = labels[:idx]
                 predicted = predicted[:idx]
 
-
-            # total += labels.size(-1)
-            # correct += (predicted == labels).sum().item()
             total += labels.size(-1)
             correct += (predicted == labels).sum().item()
 
@@ -112,10 +110,6 @@ def validation(valid_txt, model, model_name, device, kaldi, log_dir, num_lang, l
                 score_pos.append(outputs[:,:1].cpu().numpy().tolist())
                 preds.append(predicted.cpu().numpy().astype(int).tolist())
                 truths.append(labels.cpu().numpy().astype(int).tolist())
-            # if step > 10:
-            #     break
-
-    # print(f"preds: {preds}\ntruths: {truths}")
 
     acc = correct / total
     print('Current Acc.: {:.4f} %'.format(100 * acc))

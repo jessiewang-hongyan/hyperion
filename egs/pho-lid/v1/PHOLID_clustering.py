@@ -57,11 +57,20 @@ def validation(valid_txt, model, model_name, device, kaldi, log_dir, num_lang, l
 
             # Forward pass
             embeddings = model.get_embeddings(utt, seq_len)
-            embeddings = embeddings.reshape(-1, 1, embeddings.shape[-1])
+            embeddings = embeddings.reshape(-1, embeddings.shape[-1])
 
-            outputs = F.cosine_similarity(embeddings, lang_vecs, dim=1)
+            score_0 = F.cosine_similarity(embeddings, lang_vecs[0, :], dim=0)
+            score_1 = F.cosine_similarity(embeddings, lang_vecs[1, :], dim=0)
+            # print(f'embeddings shape: {embeddings.shape} lang_vec shape: {lang_vecs.shape} score_0: {score_0.shape}')
+
+            
+            outputs = torch.stack((score_0, score_1))
+            outputs = torch.transpose(outputs, 0, 1)
+            # print(outputs.shape)
 
             predicted = torch.argmax(outputs, -1)
+            # print(f'embeddings shape: {embeddings.shape} outputs shape: {outputs.shape} lang_vec shape: {lang_vecs.shape} predicted shape: {predicted.shape}')
+
             labels = labels.squeeze()
             predicted = predicted.squeeze()
             outputs = outputs.squeeze()
@@ -80,9 +89,6 @@ def validation(valid_txt, model, model_name, device, kaldi, log_dir, num_lang, l
                 labels = labels[:idx]
                 predicted = predicted[:idx]
 
-
-            # total += labels.size(-1)
-            # correct += (predicted == labels).sum().item()
             total += labels.size(-1)
             correct += (predicted == labels).sum().item()
 
@@ -104,10 +110,6 @@ def validation(valid_txt, model, model_name, device, kaldi, log_dir, num_lang, l
                 score_pos.append(outputs[:,:1].cpu().numpy().tolist())
                 preds.append(predicted.cpu().numpy().astype(int).tolist())
                 truths.append(labels.cpu().numpy().astype(int).tolist())
-            # if step > 10:
-            #     break
-
-    # print(f"preds: {preds}\ntruths: {truths}")
 
     acc = correct / total
     print('Current Acc.: {:.4f} %'.format(100 * acc))
@@ -165,7 +167,9 @@ def main():
                    n_lang=config_proj["model_config"]["n_language"],
                    max_seq_len=10000)
 
-    model.load_state_dict(torch.load('./models/pconv_seame_bf/pconv_seame_bf_epoch_4.ckpt'))
+    if config_proj["Input"]["load_path"] is not None:
+        model.load_state_dict(torch.load(config_proj["Input"]["load_path"]))
+    # model.load_state_dict(torch.load('./models/pconv_seame_bf/pconv_seame_bf_epoch_4.ckpt'))
     model.to(device)
     model_name = config_proj["model_name"]
     print("model name: {}".format(model_name))
