@@ -35,12 +35,12 @@ conda activate merlion4d01
 # python ./local/seame_process/seame_mix_2vec.py
 
 # step 5: split into train and test according to speakers
-python ./local/seame_process/seame_spk_split.py
+# python ./local/seame_process/seame_spk_split.py
 python ./local/seame_process/seame_merge.py
 
 
 # remove duplicated lines
-sort ./local/seame_split/pure/feat2lang_train.txt | uniq > ./local/seame_split/pure/feat2lang_train_final.txt
-sort ./local/seame_split/pure/feat2lang_test.txt | uniq > ./local/seame_split/pure/feat2lang_test_final.txt
+# sort ./local/seame_split/pure/feat2lang_train.txt | uniq > ./local/seame_split/pure/feat2lang_train_final.txt
+# sort ./local/seame_split/pure/feat2lang_test.txt | uniq > ./local/seame_split/pure/feat2lang_test_final.txt
 sort ./local/seame_split/cat/feat2lang_train.txt | uniq > ./local/seame_split/cat/feat2lang_train_final.txt
 sort ./local/seame_split/cat/feat2lang_test.txt | uniq > ./local/seame_split/cat/feat2lang_test_final.txt

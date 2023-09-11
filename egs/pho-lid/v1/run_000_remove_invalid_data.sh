@@ -24,5 +24,5 @@ config_file=default_config.sh
 . datapath.sh 
 
 # conda activate merlion
-conda activate python3_9
+conda activate merlion4d01
 python ./local/seame_process/remove_invalid_data.py

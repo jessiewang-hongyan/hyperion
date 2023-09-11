@@ -161,8 +161,8 @@ def compute_cprimary(trial_txt, score_txt, p_target_1=0.5, p_target_2=0.1):
 def get_weighted_acc(outputs, truths, lang_num, ignore_idx=100):
   ''' Compute balanced accuracy.
   '''
-  outputs = outputs.flatten()
-  truths = truths.flatten()
+  # outputs = outputs.flatten()
+  # truths = truths.flatten()
   acc = list()
   weights = list()
   total = list()

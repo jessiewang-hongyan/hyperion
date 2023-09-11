@@ -23,5 +23,6 @@ config_file=default_config.sh
 . parse_options.sh || exit 1;
 . datapath.sh 
 
-conda activate python3_9
-python ./local/seame_process/detect_no_npy.py
+conda activate merlion4d01
+# python ./local/seame_process/detect_no_npy.py
+python ./local/seame_process/detect_0_in_npy.py

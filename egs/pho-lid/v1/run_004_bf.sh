@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#$ -N pholid_merlion
-#$ -j y -o /export/c12/ywang793/logs/log.pholid_merlion
+#$ -N pholid_bf_test_merlion
+#$ -j y -o /export/c12/ywang793/logs/log.pholid_bf_test_merlion
 #$ -M ywang793@jh.edu
 #$ -m e
 #$ -l ram_free=20G,mem_free=20G,gpu=1,hostname=d01
@@ -27,12 +27,10 @@ mkdir -p ./models
 
 source ~/.bashrc
 # conda activate merlion
-# conda activate python3_9
+conda activate python3_9
 # conda activate cuda11
-conda activate merlion4d01
+# conda activate merlion4d01
 
-python train_PHOLID.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_merlion_pholid.json
-# python test_PHOLID.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_seame_pconv.json
-# python bf_PHOLID.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_seame_pconv.json
+python bf_PHOLID.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_seame_bf.json
 # python bf_PHOLID.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_merlion_pconv.json
 

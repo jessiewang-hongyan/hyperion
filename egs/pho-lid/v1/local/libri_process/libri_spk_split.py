@@ -4,10 +4,10 @@ import random
 import math
 
 if __name__ == '__main__':
-    data_list = '/export/fs05/ywang793/merlion/train/cat_processed/feat2lang.txt'
-    spk_file = 'local/merlion_split/spk_file_new.json'
-    spk_train_split_file = 'local/merlion_split/spk_train_new.txt'
-    spk_test_split_file = 'local/merlion_split/spk_test_new.txt'
+    data_list = '../../../mini_libri/train/processed/feat2lang.txt'
+    spk_file = 'local/merlion_split/spk_file.json'
+    spk_train_split_file = 'local/merlion_split/spk_train.txt'
+    spk_test_split_file = 'local/merlion_split/spk_test.txt'
 
     train_ratio = 0.5
 
@@ -21,7 +21,7 @@ if __name__ == '__main__':
         if len(x.split()) > 1:
             spk_rec = x.split()[0]
             if spk_rec[-4:] == '.npy':
-                spk = spk_rec.split(sep='_')[2]
+                spk = spk_rec.split(sep='_')[1]
                 if spk in spk_dict.keys():
                     spk_dict[spk].append(spk_rec)
                 else:

@@ -160,13 +160,13 @@ def main():
                    max_seq_len=10000)
     model.load_state_dict(torch.load(config_proj["clf_config"]["model_load_path"], map_location=device))
     model.to(device)
-    model.eval()
+    # model.eval()
 
     # add classifiers
     clfs = []
     for i in range(2):
         clf = LD_classifier(in_dim=model.d_model, kernel_size=5, lang_lab=i)
-        clf.load_state_dict(torch.load(f'./models/clfs/pconv_seame/train_seame/clf{i}/clf{i}_epoch_31.ckpt', map_location=device))
+        # clf.load_state_dict(torch.load(f'./models/clfs/pconv_seame/train_seame/clf{i}/clf{i}_epoch_31.ckpt', map_location=device))
 
         clfs.append(clf)
         clf.to(device)
@@ -197,105 +197,96 @@ def main():
     else:
         test_txt = None
 
-    loss_func_lid = nn.CrossEntropyLoss().to(device)
-    num_nega_samples = config_proj["optim_config"]["nega_frames"]
-    print("Compute phoneme SSL over segments with {} negative samples".format(num_nega_samples))
-    loss_func_phn = Phoneme_SSL_loss(num_frames=20, num_sample=num_nega_samples).to(device)
+    # loss_func_lid = nn.CrossEntropyLoss().to(device)
+    # num_nega_samples = config_proj["optim_config"]["nega_frames"]
+    # print("Compute phoneme SSL over segments with {} negative samples".format(num_nega_samples))
+    # loss_func_phn = Phoneme_SSL_loss(num_frames=20, num_sample=num_nega_samples).to(device)
     total_step = len(train_data)
     total_epochs = config_proj["clf_config"]["epochs"]
     valid_epochs = config_proj["optim_config"]["valid_epochs"]
-    weight_lid = config_proj["optim_config"]["weight_lid"]
-    weight_ssl = config_proj["optim_config"]["weight_ssl"]
-    print("weights: LID {} SSL {}".format(weight_lid, weight_ssl))
-    optimizer = torch.optim.Adam(model.parameters(), lr=config_proj["clf_config"]["learning_rate"])
-    SSL_epochs = config_proj["optim_config"]["SSL_epochs"]
-    SSL_steps = SSL_epochs * total_step
-    if config_proj["optim_config"]["warmup_step"] == -1:
-        warmup = total_step * 3
-    else:
-        warmup = config_proj["optim_config"]["warmup_step"]
-    if config_proj["optim_config"]["warmup_step"] == -1:
-        warmup = total_step * 3
-    else:
-        warmup = config_proj["optim_config"]["warmup_step"]
-    warm_up_with_cosine_lr = lambda step: 1 if step <= SSL_steps else (
-        (step - SSL_steps) / warmup if step < SSL_steps + warmup else 0.5 * (
-                math.cos((step - SSL_steps - warmup) / (total_epochs * total_step - SSL_steps - warmup) * math.pi) + 1))
-    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=warm_up_with_cosine_lr)
+    # weight_lid = config_proj["optim_config"]["weight_lid"]
+    # weight_ssl = config_proj["optim_config"]["weight_ssl"]
+    # print("weights: LID {} SSL {}".format(weight_lid, weight_ssl))
+    # optimizer = torch.optim.Adam(model.parameters(), lr=config_proj["clf_config"]["learning_rate"])
+    # SSL_epochs = config_proj["optim_config"]["SSL_epochs"]
+    # SSL_steps = SSL_epochs * total_step
+    # if config_proj["optim_config"]["warmup_step"] == -1:
+    #     warmup = total_step * 3
+    # else:
+    #     warmup = config_proj["optim_config"]["warmup_step"]
+    # if config_proj["optim_config"]["warmup_step"] == -1:
+    #     warmup = total_step * 3
+    # else:
+    #     warmup = config_proj["optim_config"]["warmup_step"]
+    # warm_up_with_cosine_lr = lambda step: 1 if step <= SSL_steps else (
+    #     (step - SSL_steps) / warmup if step < SSL_steps + warmup else 0.5 * (
+    #             math.cos((step - SSL_steps - warmup) / (total_epochs * total_step - SSL_steps - warmup) * math.pi) + 1))
+    # scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=warm_up_with_cosine_lr)
 
     # train clfs
     print(f'Learning rate: {config_proj["clf_config"]["learning_rate"]}')
-    optms = []
-    schdlers = []
-    save_paths = []
+    e2e_model = ld_e2e(model, clfs[0], clfs[1])
+    optimizer = torch.optim.Adam(e2e_model.parameters(), lr=config_proj["clf_config"]["learning_rate"])
+    scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=2, verbose=True, eps=1e-12)
+    save_path = './models/e2e/seame/'
 
-    # for clf in clfs:
-    #     optimizer = torch.optim.Adam(clf.parameters(), lr=config_proj["clf_config"]["learning_rate"])
-    #     # scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=warm_up_with_cosine_lr)
-    #     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, patience=2, verbose=True, eps=1e-50)
-    #     optms.append(optimizer)
-    #     schdlers.append(scheduler)
+    for epoch in tqdm(range(total_epochs)):
+        loss_func_clf0 = nn.CrossEntropyLoss(ignore_index=100).to(device)
+        loss_func_clf1 = nn.CrossEntropyLoss(ignore_index=100).to(device)
+        loss_sum = 0
+        loss_sum0 = 0
+        loss_sum1 = 0
 
-    #     # save ckpt in a folder
-    #     if not os.path.exists(config_proj["clf_config"]["save_path"]):
-    #         os.mkdir(config_proj["clf_config"]["save_path"])
-    #     model_save_path = config_proj["clf_config"]["save_path"] +'/clf'+str(clf.lang_lab)
-    #     if not os.path.exists(model_save_path):
-    #         os.mkdir(model_save_path) 
-    #     save_paths.append(model_save_path)
+        for step, (utt, labels, seq_len) in enumerate(train_data):
+            optimizer.zero_grad()
 
-    # for epoch in tqdm(range(total_epochs)):
-    #     model.eval()
+            # print(f'labels size: {labels.shape}')
 
-    #     loss_func_clf = nn.CrossEntropyLoss(ignore_index=100).to(device)
-    #     for step, (utt, labels, seq_len) in enumerate(train_data):
-    #         # print(f'labels size: {labels.shape}')
+            utt_ = utt.to(device=device)
+            atten_mask = get_atten_mask(seq_len, utt_.size(0))
+            atten_mask = atten_mask.to(device=device)
 
-    #         utt_ = utt.to(device=device)
-    #         atten_mask = get_atten_mask(seq_len, utt_.size(0))
-    #         atten_mask = atten_mask.to(device=device)
+            transformed_labels = []
 
+            if isinstance(labels[0], int):
+                transformed_labels.append(e2e_model.clf0.convert_lab_from_lid(labels, max_seq_len=max(seq_len)).to(device=device))
+                transformed_labels.append(e2e_model.clf1.convert_lab_from_lid(labels, max_seq_len=max(seq_len)).to(device=device))
+            else:
+                transformed_labels.append(e2e_model.clf0.convert_lab(labels, ignore_idx=100).to(device=device))
+                transformed_labels.append(e2e_model.clf1.convert_lab(labels, ignore_idx=100).to(device=device))
+
+            # print(f'transformed_labels[0]: {transformed_labels[0].shape}')
+            output0, output1 = e2e_model(utt_, seq_len, atten_mask)
+
+            weight0 = 0.5
+            loss_clf0 = loss_func_clf0(output0, transformed_labels[0])
+            loss_clf1 = loss_func_clf1(output1, transformed_labels[1])
+            total_loss = weight0 * loss_clf0 + (1 - weight0) * loss_clf1
+
+            total_loss.backward()
+            optimizer.step()
+            loss_sum = loss_sum + total_loss
+            loss_sum0 = loss_sum0 + loss_clf0
+            loss_sum1 = loss_sum1 + loss_clf1
+           
+        scheduler.step(loss_sum)
+        print("Epoch [{}/{}], total Loss: {:.4f}, loss0: {:.4f}, loss1: {:.4f}".
+            format(epoch + 1, total_epochs, loss_sum.item(), loss_sum0.item(), loss_sum1.item()))
+        
+        torch.save(e2e_model.state_dict(), '{}_epoch_{}.ckpt'.format(save_path+'/e2e', epoch))
             
-    #         for clf, optimizer, scheduler in zip(clfs, optms, schdlers):
-    #             # phonotactic embeddings
-    #             embeddings = model.get_embeddings(utt_, seq_len, atten_mask)
-            
-    #             # convert labels
-    #             # print(f'seq_len: {seq_len}')
-    #             # print(f'labels.shape: {labels.shape}, atten_mask shape: {atten_mask.shape}')
-    #             if isinstance(labels[0], int):
-    #                 transformed_labels = clf.convert_lab_from_lid(labels, max_seq_len=max(seq_len))
-    #             else:
-    #                 transformed_labels = clf.convert_lab(labels, ignore_idx=100)
-    #             # print(f'transformed_labels.shape: {transformed_labels.shape}')
-
-    #             transformed_labels = torch.flatten(transformed_labels)
-    #             transformed_labels = transformed_labels.to(device=device)
-
-    #             # forward
-    #             clf_outputs = clf(embeddings).reshape(-1, 2)
-    #             loss_clf = loss_func_clf(clf_outputs, transformed_labels)
-    #             optimizer.zero_grad()
-    #             loss_clf.backward()
-    #             optimizer.step()
-    #             # scheduler.step()
-    #             scheduler.step(loss_clf)
-
-    #             if step % 100 == 0:
-    #                 print("Epoch [{}/{}], Step [{}/{}] clf {} Loss: {:.4f}".
-    #                     format(epoch + 1, total_epochs, step + 1, total_step, clf.lang_lab,loss_clf.item()))
-                    
-    #         for idx, clf, save_path in zip(range(2), clfs, save_paths):
-    #             torch.save(clf.state_dict(), '{}_epoch_{}.ckpt'.format(save_path+'/clf'+str(idx), epoch+12))
-            
-    #         # if epoch >= total_epochs - valid_epochs - 1:
-    #         #     for clf in clfs:
-    #         #         if valid_txt is not None:
-    #         #             validation_clf(valid_txt, model, clf, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
-    #         #                     num_lang=config_proj["model_config"]["n_language"])
-    #         #         if test_txt is not None:
-    #         #             validation_clf(test_txt, model, clf, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
-    #         #                     num_lang=config_proj["model_config"]["n_language"])
+            # if epoch >= total_epochs - valid_epochs - 1:
+            #     for clf in clfs:
+            #         if valid_txt is not None:
+            #             validation_clf(valid_txt, model, clf, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
+            #                     num_lang=config_proj["model_config"]["n_language"])
+            #         if test_txt is not None:
+            #             validation_clf(test_txt, model, clf, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
+            #                     num_lang=config_proj["model_config"]["n_language"])
+    clfs = []
+    model = e2e_model.pconv
+    clfs.append(e2e_model.clf0)
+    clfs.append(e2e_model.clf1)
     for idx, clf in enumerate(clfs):
         if valid_txt is not None:
             validation_clf(valid_txt, model, clf, model_name, device, kaldi=kaldi_root, log_dir=log_dir,

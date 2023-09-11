@@ -141,7 +141,9 @@ class cs_concat():
         torchaudio.save(cat_save_path, cat_waveform, sr, bits_per_sample=16)
 
         # write in the file
-        save_data_lab_path = self.dir + self.save_dir + '/' + self.data_label_list
+        # save_data_lab_path = self.dir + self.save_dir + '/' + self.data_label_list
+        save_data_lab_path = self.dir + self.save_dir + '/' + 'data_label_list.txt'
+        
         # print(cat_lab.tolist())
 
         with open(save_data_lab_path, 'a') as file:
@@ -150,7 +152,7 @@ class cs_concat():
 
 
 if __name__ == '__main__':
-    mix_concat_num = 10
+    mix_concat_num = 50
     pure_concat_num = 10
     
     for dir_name in os.listdir("data/seame/"):
@@ -165,9 +167,9 @@ if __name__ == '__main__':
                     can_do_cs = False
             if can_do_cs:
                 # remove old label_file
-                save_data_lab_path = concat.dir + concat.save_dir + '/' + concat.data_label_list
-                if os.path.exists(save_data_lab_path):
-                    os.remove(save_data_lab_path)
+                # save_data_lab_path = concat.dir + concat.save_dir + '/' + concat.data_label_list
+                # if os.path.exists(save_data_lab_path):
+                #     os.remove(save_data_lab_path)
 
                 # generate longer pure audio
                 # if not os.path.exists(concat.dir + "/data_label_list_old.txt"):
@@ -175,16 +177,16 @@ if __name__ == '__main__':
                 for i in range(mix_concat_num):
                     concat.concat_random(ratio=[0.5, 0.5])
 
-                lang_list = concat.lists_by_lang
-                num_lang_0 = len(lang_list[0])
-                num_lang_1 = len(lang_list[1])
+                # lang_list = concat.lists_by_lang
+                # num_lang_0 = len(lang_list[0])
+                # num_lang_1 = len(lang_list[1])
 
-                gen_lang_0_samples = pure_concat_num if num_lang_0 > 15 else 2
-                gen_lang_1_samples = pure_concat_num if num_lang_1 > 15 else 2
-                for i in range(gen_lang_0_samples):
-                    concat.concat_pure(min_time_len=30000, lang_lab=0)
-                for i in range(gen_lang_1_samples):
-                    concat.concat_pure(min_time_len=30000, lang_lab=1)
+                # gen_lang_0_samples = pure_concat_num if num_lang_0 > 15 else 2
+                # gen_lang_1_samples = pure_concat_num if num_lang_1 > 15 else 2
+                # for i in range(gen_lang_0_samples):
+                #     concat.concat_pure(min_time_len=30000, lang_lab=0)
+                # for i in range(gen_lang_1_samples):
+                #     concat.concat_pure(min_time_len=30000, lang_lab=1)
 
                 print(file_path + 'concatenate process done.')
 

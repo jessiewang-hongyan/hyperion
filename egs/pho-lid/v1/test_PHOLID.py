@@ -12,7 +12,7 @@ from tqdm import tqdm
 from scoring_ld import draw_roc
 from train_PHOLID import *
 
-def main(model_path):
+def main(model_path, m_name):
     parser = argparse.ArgumentParser(description='paras for making data')
     # parser = argparse.ArgumentParser()
     parser.add_argument('--json', type=str, default='xsa_config.json')
@@ -42,7 +42,7 @@ def main(model_path):
 
     model.load_state_dict(torch.load(model_path))
     model.to(device)
-    model_name = config_proj["model_name"]
+
     print("model path: {}".format(model_path))
     log_dir = config_proj["Input"]["userroot"] + config_proj["Input"]["log"]
     kaldi_root = config_proj["kaldi"]
@@ -54,17 +54,13 @@ def main(model_path):
         valid_txt = config_proj["Input"]["userroot"] + config_proj["Input"]["valid"]
     else:
         valid_txt = None
-    if config_proj["Input"]["test"] != "none":
-        print("Test is True")
-        test_txt = config_proj["Input"]["userroot"] + config_proj["Input"]["test"]
-    else:
-        test_txt = None
 
     if valid_txt is not None:
-        validation(valid_txt, model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
+        validation(valid_txt, model, m_name, device, kaldi=kaldi_root, log_dir=log_dir,
                     num_lang=config_proj["model_config"]["n_language"])
 
 if __name__ == "__main__":
     m_folder = './models/pconv_seame/'
     for m_name in os.listdir(m_folder):
-        main(m_folder + m_name)
+        print(m_name)
+        main(m_folder + m_name, m_name)

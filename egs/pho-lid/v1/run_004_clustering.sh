@@ -1,13 +1,13 @@
 #!/bin/bash
 
-#$ -N clf_train_seame
-#$ -j y -o /export/c12/ywang793/logs/log.clf_train_seame
+#$ -N pholid_ahc_merlion
+#$ -j y -o /export/c12/ywang793/logs/log.pholid_ahc_merlion
 #$ -M ywang793@jh.edu
 #$ -m e
-#$ -l ram_free=20G,mem_free=20G,gpu=1,hostname=c*
+#$ -l ram_free=20G,mem_free=20G,gpu=1,hostname=d01
 #$ -wd /export/fs05/ywang793/hyperion/egs/pho-lid/v1 
 # Submit to GPU c0*|c1[0123456789]
-#$ -q g.q
+#$ -q p.q
 
 source /home/gqin2/scripts/acquire-gpu
 # export CUDA_VISIBLE_DEVICES=$(free-gpu)
@@ -27,10 +27,11 @@ mkdir -p ./models
 
 source ~/.bashrc
 # for b and c machines, cuda version 10.2
-conda activate merlion
+# conda activate merlion
 # the env for d01 machine
 # conda activate merlion4d01
-# conda activate python3_9
+conda activate python3_9
 
 
-python train_clf.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_seame_pconv.json
+# python PHOLID_clustering.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_merlion_clustering.json
+python PHOLID_cluster_test.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_merlion_clustering.json

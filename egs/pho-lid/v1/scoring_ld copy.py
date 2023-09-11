@@ -38,9 +38,6 @@ def get_score(utt2lan, scores, num_lang, output):
     utt_list = [os.path.split(x.split(sep='\t')[0])[-1].strip('.npy') for x in lines]
     lang_list = [x.split(sep='\t')[1].strip().replace('[', '').replace(']', '').split(sep=', ') for x in lines]
     
-    # utt_list = utt_list[:10]
-    # lang_list = lang_list[:10]
-
     float_lang_list = []
     for row in lang_list:
       float_row = []
@@ -50,15 +47,15 @@ def get_score(utt2lan, scores, num_lang, output):
       float_lang_list.append(float_row)
     lang_list = float_lang_list
 
-    # print(scores)
+    print(scores)
 
     targets = [i for i in range(num_lang)]
     with open(output, 'w') as f:
         for i in range(len(utt_list)):
-          # print(f'i={i}')
+          print(f'i={i}')
           for idx, j in enumerate(range(len(scores[i]))):
             for lang_id in targets:
-              score_utt = scores[i][j]
+              score_utt = scores[i]
               str_ = "{} {} {}\n".format(utt_list[i]+"-{}".format(idx), lang_id, score_utt[lang_id])
               f.write(str_)
 
@@ -208,26 +205,23 @@ def get_weighted_acc(outputs, truths, lang_num, ignore_idx=100):
     LTa.append(0)
 
   for output, truth in zip(outputs, truths):
-    for o, t in zip(output, truth):
-      t = int(t)
-      o = int(o)
+      t = int(truth)
+      o = int(output)
       if t != ignore_idx:
         total[t] += 1
         if t == o:
           LTa[t] += 1    
 
   total_sum = sum(total)
-  print(f"total: {total}")
   for lang in range(lang_num):
-    acc[lang] = LTa[lang] / total[lang]
-    # if total[lang] > 0:
-    #   acc[lang] = LTa[lang] / total[lang]
-    # else:
-    #    acc[lang] = 0
-  # if total_sum > 0:
+    if total[lang] > 0.0:
+      acc[lang] = LTa[lang] / total[lang]
+    else:
+       acc[lang] = 0
+  if total_sum >0:
     weights[lang] = total[lang] / total_sum 
-  # else:
-  #   weights[lang] = 0
+  else:
+    weights[lang] = 0
     
   b_acc = 0.0
   for lang in range(lang_num):
@@ -249,15 +243,7 @@ def compute_wacc(outputs, truths, num_langs):
 
 
 def get_bacc(y_true, y_pred):
-  new_y_true = []
-  new_y_pred = []
-
-  for t, p in zip(y_true, y_pred):
-    new_y_true = new_y_true + t
-    new_y_pred = new_y_pred + p
-
-  # print(f'y_true: {new_y_true}\ty_pred: {new_y_pred}')
-  return round(balanced_accuracy_score(new_y_true, new_y_pred), 4)
+  return round(balanced_accuracy_score(y_true, y_pred), 4)
 
 def draw_roc(y, scores, fname):
   fpr, tpr, thresholds = roc_curve(y, scores)

@@ -296,7 +296,7 @@ class PHOLID_conv(PHOLID):
 
 
     def get_embeddings(self, x, seq_len, atten_mask=None):
-        self.eval()
+        # self.eval()
         batch_size = x.size(0)
         T_len = x.size(1)
 
@@ -323,6 +323,25 @@ class PHOLID_conv(PHOLID):
         # print(f'The dim of attention output: {output.shape}')
         return output
 
+    def bf_check(self, vec, seq_len,  mean_mask_=None, weight_mean=None, std_mask_=None, weight_unbaised=None):
+        batch_size = vec.size(0)
+        vec = vec.squeeze().repeat(1, 1, 2)
+        # if std_mask_ is not None:
+        #     stats = self.mean_std_pooling(vec, batch_size, seq_len, mean_mask_, weight_mean,
+        #                                   std_mask_, weight_unbaised)
+        # else:
+        #     stats = torch.cat((vec.mean(dim=1), vec.std(dim=1)), dim=1)
+        
+        # print(f'vec size: {vec.squeeze().shape}')
+        # print(f'stats size: {stats.shape}')
+        
+        output = self.lid_clf(vec)
+
+        # print(f'final output size: {output.shape}')
+
+        return output
+
+
 class LD_classifier(nn.Module):
     def __init__(self, in_dim:int, kernel_size:int, lang_lab=0):
         super(LD_classifier, self).__init__()
@@ -342,18 +361,10 @@ class LD_classifier(nn.Module):
         self.lang_lab = lang_lab
 
     def forward(self, x):
-        # print('-------------------------')
-        # print(f'clf input: {x.shape}')
         output = self.linear(x)
-        # print(f'clf linear output:{output.shape}')
         output = output.transpose(1, 2)
-        # print(f'clf transponse: {output.shape}')
         output = self.conv(output)
-        # print(f'clf conv result:{output.shape}')
         output = output.squeeze()
-        # print(f'clf squeeze: {output.shape}')
-        # decision = torch.argmax(x)
-        # print(f'clf decision: {decision.shape}')
         output = self.softmax(output)
         return output
     
@@ -366,15 +377,18 @@ class LD_classifier(nn.Module):
         convert = lambda y: int(y == self.lang_lab)
         new_labels = [[convert(lab)]*max_seq_len for lab in y]
         return torch.tensor(new_labels)
-    
-    
 
-# class LD_system():
-#     def __init__(self,input_dim, feat_dim,
-#                  d_k, d_v, d_ff, n_heads=8,
-#                  dropout=0.1, n_lang=3, max_seq_len=10000, conv_kernel_size=5):
-#         self.pholid
+class ld_e2e(nn.Module):
+    def __init__(self, pconv, clf0, clf1):
+        super(ld_e2e, self).__init__()
+        self.pconv = pconv
+        self.clf0 = clf0
+        self.clf1 = clf1
 
-#     def train():
+    def forward(self, x, seq_len, atten_mask=None):
+        embd = self.pconv.get_embeddings(x, seq_len, atten_mask)
+        output0 = self.clf0(embd)
+        output1 = self.clf1(embd)
+        return output0, output1
 
-#     def predict():
+

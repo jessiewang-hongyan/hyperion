@@ -23,5 +23,5 @@ config_file=default_config.sh
 . parse_options.sh || exit 1;
 . datapath.sh 
 
-conda activate python3_9
+conda activate merlion4d01
 python ./local/delete_bydir.py

@@ -23,7 +23,7 @@ class label_reader(object):
                  list_save_path='/data_label_list.txt', 
                  silence='NON_SPEECH', 
                  absolute_path=False, 
-                 save_root='/export/fs05/ywang793/hyperion/egs/pho-lid/v1/data/merlion/train/'):
+                 save_root='/export/fs05/ywang793/merlion/train/'):
         super().__init__()
         self.audio_path = audio_path
         self.audio_label_list = audio_label_list
@@ -35,14 +35,17 @@ class label_reader(object):
         self.audio_segs = dict()
 
     def upsampling_lre(self, audio, save_dir):
-        if audio.endswith('.sph'):
-            data, sr = librosa.load(audio, sr=None)
-            new_name = save_dir + '/' + os.path.split(audio)[-1].replace('.sph', '.wav')
-            sf.write(new_name, data, 8000, subtype='PCM_16')
-            subprocess.call(f"sox {audio} -r 16000 {new_name}", shell=True)
-        elif audio.endswith('.wav') or audio.endswith('.WAV'):
+        if audio.endswith('.wav') or audio.endswith('.WAV'):
             new_name = save_dir + '/' + os.path.split(audio)[-1].replace('.WAV', '.wav')
-            subprocess.call(f"sox {audio} -r 16000 {new_name}", shell=True)
+            # subprocess.call(f"sox \"{audio}\" -r {self.sample_rate} \"{new_name}\"", shell=True)
+            data, sr = librosa.load(audio, sr=None)
+            sf.write(new_name, data, 16000, subtype='PCM_16')
+
+        elif audio.endswith('.flac'):
+            new_name = save_dir + '/' + os.path.split(audio)[-1].replace('.flac', '.wav')
+            # subprocess.call(f"sox \"{audio}\" -r {self.sample_rate} \"{new_name}\"", shell=True)
+            data, sr = librosa.load(audio, sr=None)
+            sf.write(new_name, data, 16000, subtype='PCM_16')
 
         return new_name
 
@@ -58,10 +61,10 @@ class label_reader(object):
                 (audio, utt, start, end, length, lang, overlap, dev) = tuple(row)
                 
                 temp = dict()
-                temp['seg'] = (int(start)*1000, int(end)*1000)
+                temp['seg'] = (int(start), int(end))
                 temp['lab'] = lang
                 temp['utt'] = utt
-                temp['length'] = int(length)*1000
+                temp['length'] = int(length)
                 if audio not in self.audio_segs.keys(): 
                     self.audio_segs[audio] = list()
                 
@@ -85,6 +88,7 @@ class label_reader(object):
             save_dir = self.audio_save_path
             saved_audio = self.upsampling_lre(audio_path, save_dir)
             waveform, sample_rate = torchaudio.load(saved_audio)
+            # print(f'loaded waveform: {waveform.shape}')
 
             # do segmentation for each recorded segment
             for s in segments:
@@ -94,15 +98,20 @@ class label_reader(object):
                 w_start = int(t_start * sample_rate / 1000)
                 w_end = int(t_end * sample_rate / 1000)
 
+
                 # segment speech
                 seg_wav = waveform[:, w_start : w_end]
+
+                # print(f"t_start: {t_start}, t_end: {t_end}, w_start: {w_start}, w_end: {w_end}, seg_len: {seg_wav.shape}")
+
                 seg_name = recording.replace('.wav', '') + '_' + utt +'.wav'
                 segment_path = self.seg_save_path + seg_name
-                torchaudio.save(segment_path, seg_wav, sample_rate)
+                torchaudio.save(segment_path, seg_wav, sample_rate, bits_per_sample=16)
+                seg_len = t_end-t_start
 
                 # write in the file
                 with open(file_path, 'a') as file:
-                    file.write(seg_name+ '\t' + lab + '\n')
+                    file.write(seg_name+ '\t' + lab + '\t' + str(seg_len) + '\n')
 
 
 if __name__ == '__main__':
