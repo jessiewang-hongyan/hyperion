@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#$ -N exp_bf_oldm
-#$ -j y -o /export/c12/ywang793/logs/log.exp_oldm
+#$ -N exp_norm
+#$ -j y -o /export/c12/ywang793/logs/log.exp_norm
 #$ -M ywang793@jh.edu
 #$ -m e
 #$ -l ram_free=20G,mem_free=20G,gpu=1,hostname=c*
@@ -31,15 +31,15 @@ conda activate merlion
 # conda activate cuda11
 # conda activate merlion4d01
 
-echo "-------------------------"
-echo "for pholid without conv"
-echo "-------------------------"
+# echo "-------------------------"
+# echo "for pholid without conv"
+# echo "-------------------------"
 
 # echo "BF on SEAME pure:"
 # python bf_PHOLID.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_seame_bf.json
 
-echo "BF on SEAME pure -> SEAME mix:"
-python bf_PHOLID.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_seame_bf2.json
+# echo "BF on SEAME pure -> SEAME mix:"
+python bf_score_norm.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_score_norm_bf.json
 
 # echo "BF on SEAME pure -> MERLIon mix:"
 # python bf_PHOLID.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_seame_bf3.json

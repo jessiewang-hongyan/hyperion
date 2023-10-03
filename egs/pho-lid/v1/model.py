@@ -134,18 +134,12 @@ class PHOLID(nn.Module):
 
     def forward(self, x, seq_len, mean_mask_=None, weight_mean=None, std_mask_=None, weight_unbaised=None,
                 atten_mask=None, eps=1e-5):
-        # print(f'--------------------------------------------')
-        # print(f'data input x:{x.shape}, seq_len: {seq_len}')
-
         batch_size = x.size(0)
         T_len = x.size(1)
         x = x.view(batch_size * T_len, -1, self.input_dim).transpose(-1, -2)
         x = self.shared_TDNN(x)
         pho_x = x.transpose(-1, -2)
         pho_out = self.phoneme_proj(pho_x)
-
-        # print(f'pho x:{pho_x.shape}')
-        # print(f'pho output:{pho_out.shape}')
 
         if self.training:
             shape = x.size()
@@ -158,36 +152,14 @@ class PHOLID(nn.Module):
         embedding = self.fc_xv(seg_stats)
         embedding = embedding.view(batch_size, T_len, self.feat_dim)
 
-        # print(f'seg_stats x:{seg_stats.shape}')
-        # print(f'embedding:{embedding.shape}')
-
         output = self.layernorm1(embedding)
-
-        # print(f'layernorm1 output:{output.shape}')
-
         output = self.pos_encoding(output, seq_len)
-
-        # print(f'pos_encoding output:{output.shape}')
-
         output = self.layernorm2(output)
-
-        # print(f'layernorm2 output:{output.shape}')
-
         output = output.unsqueeze(1).repeat(1, self.n_heads, 1, 1)
-
-        # print(f'unsqueeze repeat output:{output.shape}')
-
         output = output.transpose(1, 2).contiguous().view(batch_size, -1, self.d_model)
 
-        # print(f'transpose contiguous output:{output.shape}')
-
         output, _ = self.attention_block1(output, atten_mask)
-
-        # print(f'attention block 1 output:{output.shape}')
-
         output, _ = self.attention_block2(output, atten_mask)
-
-        # print(f'attention block 2 output:{output.shape}')
 
         if std_mask_ is not None:
             stats = self.mean_std_pooling(output, batch_size, seq_len, mean_mask_, weight_mean,
@@ -195,15 +167,40 @@ class PHOLID(nn.Module):
         else:
             stats = torch.cat((output.mean(dim=1), output.std(dim=1)), dim=1)
 
-        # print(f'stats output:{stats.shape}')
-
         output = self.lid_clf(stats)
 
-        # print(f'lid output:{output.shape}')
-        # print(f'pho_out: {pho_out.shape}')
-        # print(f'pho_out reshape:{pho_out.reshape(batch_size, T_len, -1, 64).shape}')
-
         return output, pho_out.reshape(batch_size, T_len, -1, 64)
+
+    
+    def get_embeddings(self, x, seq_len, atten_mask=None):
+        # self.eval()
+        batch_size = x.size(0)
+        T_len = x.size(1)
+
+        x = x.view(batch_size * T_len, -1, self.input_dim).transpose(-1, -2)
+        x = self.shared_TDNN(x)
+        seg_stats = torch.cat((x.mean(dim=2), x.std(dim=2)), dim=1)
+        embedding = self.fc_xv(seg_stats)
+        embedding = embedding.view(batch_size, T_len, self.feat_dim)
+        output = self.layernorm1(embedding)
+        output = self.pos_encoding(output, seq_len)
+        output = self.layernorm2(output)
+        output = output.unsqueeze(1).repeat(1, self.n_heads, 1, 1)
+        output = output.transpose(1, 2).contiguous().view(batch_size, -1, self.d_model)
+
+        output, _ = self.attention_block1(output, atten_mask)
+        output, _ = self.attention_block2(output, atten_mask)
+
+        # print(f'The dim of attention output: {output.shape}')
+        return output
+
+    def bf_check(self, vec, seq_len,  mean_mask_=None, weight_mean=None, std_mask_=None, weight_unbaised=None):
+        batch_size = vec.size(0)
+        vec = vec.squeeze().repeat(1, 1, 2)
+        output = self.lid_clf(vec)
+
+        return output
+
 
 class PHOLID_conv(PHOLID):
     def __init__(self,input_dim, feat_dim,
@@ -326,18 +323,7 @@ class PHOLID_conv(PHOLID):
     def bf_check(self, vec, seq_len,  mean_mask_=None, weight_mean=None, std_mask_=None, weight_unbaised=None):
         batch_size = vec.size(0)
         vec = vec.squeeze().repeat(1, 1, 2)
-        # if std_mask_ is not None:
-        #     stats = self.mean_std_pooling(vec, batch_size, seq_len, mean_mask_, weight_mean,
-        #                                   std_mask_, weight_unbaised)
-        # else:
-        #     stats = torch.cat((vec.mean(dim=1), vec.std(dim=1)), dim=1)
-        
-        # print(f'vec size: {vec.squeeze().shape}')
-        # print(f'stats size: {stats.shape}')
-        
         output = self.lid_clf(vec)
-
-        # print(f'final output size: {output.shape}')
 
         return output
 

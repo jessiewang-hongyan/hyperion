@@ -32,7 +32,7 @@ def get_output(outputs, seq_len):
     return output_
 
 
-def validation(valid_txt, model, model_name, device, kaldi, log_dir, num_lang, ignore_idx=100, verbose=False):
+def validation(valid_txt, model, model_name, device, kaldi, log_dir, num_lang, cohort_mu, cohort_std, ignore_idx=100, verbose=False):
     valid_set = RawFeatures(valid_txt)
     valid_data = DataLoader(dataset=valid_set,
                             batch_size=1,
@@ -60,6 +60,9 @@ def validation(valid_txt, model, model_name, device, kaldi, log_dir, num_lang, i
             new_seq_len = [1]* (batch_size*frame_size)
 
             outputs = model.bf_check(embeddings, new_seq_len)
+            # add score normalization
+            outputs = (outputs - cohort_mu) / cohort_std
+
             predicted = torch.argmax(outputs, -1)
 
             labels = labels.squeeze()
@@ -191,31 +194,9 @@ def main():
     else:
         test_txt = None
 
-    loss_func_lid = nn.CrossEntropyLoss(ignore_index=100).to(device)
     num_nega_samples = config_proj["optim_config"]["nega_frames"]
-    print("Compute phoneme SSL over segments with {} negative samples".format(num_nega_samples))
-    # loss_func_phn = Phoneme_SSL_loss(num_frames=20, num_sample=num_nega_samples).to(device)
-    total_step = len(train_data)
-    total_epochs = config_proj["optim_config"]["epochs"]
-    valid_epochs = config_proj["optim_config"]["valid_epochs"]
-    weight_lid = config_proj["optim_config"]["weight_lid"]
-    weight_ssl = config_proj["optim_config"]["weight_ssl"]
-    print("weights: LID {} SSL {}".format(weight_lid, weight_ssl))
-    optimizer = torch.optim.Adam(model.parameters(), lr=config_proj["optim_config"]["learning_rate"])
-    SSL_epochs = config_proj["optim_config"]["SSL_epochs"]
-    SSL_steps = SSL_epochs * total_step
-    if config_proj["optim_config"]["warmup_step"] == -1:
-        warmup = total_step * 3
-    else:
-        warmup = config_proj["optim_config"]["warmup_step"]
-    if config_proj["optim_config"]["warmup_step"] == -1:
-        warmup = total_step * 3
-    else:
-        warmup = config_proj["optim_config"]["warmup_step"]
-    warm_up_with_cosine_lr = lambda step: 1 if step <= SSL_steps else (
-        (step - SSL_steps) / warmup if step < SSL_steps + warmup else 0.5 * (
-                math.cos((step - SSL_steps - warmup) / (total_epochs * total_step - SSL_steps - warmup) * math.pi) + 1))
-    scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=warm_up_with_cosine_lr)
+    num_lang=config_proj["model_config"]["n_language"]
+    print("Compute phoneme SSL over segments with {} negative samples".format(num_nega_samples))   
 
     # save ckpt in a folder
     model_save_path = './models/'+model_name
@@ -223,58 +204,51 @@ def main():
         os.mkdir(model_save_path)
 
     # brute force predict each vector in embeddings
-    for epoch in tqdm(range(total_epochs)):
-        model.train()
-        for step, (utt, labels, seq_len) in enumerate(train_data):
-            utt_ = utt.to(device=device)
-            atten_mask = get_atten_mask(seq_len, utt_.size(0))
-            atten_mask = atten_mask.to(device=device)
+    # pick some mini-batchs as cohort
+    cohort = None
+    cohort_count = 0
+    cohort_total_count = 3
 
-            batch_size = utt.shape[0]
-            frame_size = utt.shape[1]
-            new_seq_len = [1]* (batch_size*frame_size)
+    model.eval()
+    for step, (utt, labels, seq_len) in enumerate(train_data):
+        utt_ = utt.to(device=device)
+        atten_mask = get_atten_mask(seq_len, utt_.size(0))
+        atten_mask = atten_mask.to(device=device)
 
-            labels = labels.type(torch.LongTensor) 
-            labels = labels.to(device=device)
-
-            # get embeddings
-            embeddings = model.get_embeddings(utt_, seq_len, atten_mask)
-            # print(f'utt: {utt.shape}, labels: {labels.shape}, embeddings: {embeddings.shape}')
-            
-            embeddings = embeddings.reshape(-1, 1, embeddings.shape[-1])
-            # print(f'embeddings: {embeddings.shape}, mean_mask_: {mean_mask_.shape}, new_seq_len: {len(new_seq_len)}')
-
-            batch_size = utt.shape[0]
-            frame_size = utt.shape[1]
-            new_seq_len = [1]* (batch_size*frame_size)
-
-            outputs = model.bf_check(embeddings, new_seq_len)
-            outputs = outputs.squeeze()
-            # print(f'outputs: {outputs.shape}, labels: {labels.shape}')
-            if labels.shape[-1] > 25:
-                labels = labels[:, :25]
-            labels = labels.reshape(batch_size*frame_size)
-            # print(f'outputs: {outputs.shape}, labels: {labels.shape}')
-
-            # Backward and optimize
-            loss = loss_func_lid(outputs, labels)
-            optimizer.zero_grad()
-            loss.backward()
-            optimizer.step()
-            scheduler.step()
-            if step % 100 == 0:
-                print("Epoch [{}/{}], Step [{}/{}] Loss: {:.4f}".
-                      format(epoch + 1, total_epochs, step + 1, total_step, loss.item()))
-        torch.save(model.state_dict(), '{}_epoch_{}.ckpt'.format(model_save_path+'/'+model_name, epoch))
+        # get embeddings
+        embeddings = model.get_embeddings(utt_, seq_len, atten_mask)
+        # print(f'utt: {utt.shape}, labels: {labels.shape}, embeddings: {embeddings.shape}')
         
+        embeddings = embeddings.reshape(-1, 1, embeddings.shape[-1])
+        # print(f'embeddings: {embeddings.shape}, mean_mask_: {mean_mask_.shape}, new_seq_len: {len(new_seq_len)}')
+
+        batch_size = utt.shape[0]
+        frame_size = utt.shape[1]
+        new_seq_len = [1]* (batch_size*frame_size)
+
+        outputs = model.bf_check(embeddings, new_seq_len)
+        outputs = outputs.squeeze()
+
+        if cohort is None:
+            cohort = outputs
+        elif cohort_count < cohort_total_count:
+            cohort = torch.cat((cohort, outputs), dim=0)
+            cohort_count += 1
+        else:
+            break
+
+    # calculate mean and std
+    cohort_mu = cohort.mean(dim=0)
+    cohort_std = cohort.std(dim=0)
+    
     if valid_txt is not None:
         print('On val set:')
         validation(valid_txt, model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
-                    num_lang=config_proj["model_config"]["n_language"])
+                    num_lang=num_lang, cohort_mu = cohort_mu, cohort_std=cohort_std)
     if test_txt is not None:
         print('On test set:')
         validation(test_txt, model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
-                    num_lang=config_proj["model_config"]["n_language"])
+                    num_lang=num_lang, cohort_mu = cohort_mu, cohort_std=cohort_std)
 
 
 if __name__ == "__main__":

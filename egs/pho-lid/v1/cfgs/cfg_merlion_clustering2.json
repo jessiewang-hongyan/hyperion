@@ -1,11 +1,12 @@
 {
-    "model_name": "pholid_merlion",
+    "model_name": "pholid_merlion_clustering2",
     "Input": {
       "userroot": "/export/fs05/ywang793/hyperion/egs/pho-lid/v1",
-      "train": "/data/merlion/train/processed/feat2lang_train.txt",
-      "valid": "/data/merlion/train/processed/feat2lang_test.txt",
-      "test":  "/local/seame_split/pure/feat2lang_test_final.txt",
+      "train": "/local/merlion_split/feat2lang_cat_train_new.txt",
+      "valid": "/local/merlion_split/feat2lang_cat_test_new.txt",
+      "test":  "/local/seame_split/cat/feat2lang_test_final.txt",
       "log": "/logs",
+      "load_path": "./models/pconv_seame/pconv_seame_epoch_12.ckpt",
       "_comment": "Input your data dir here, each line: data_file_path lable_index segment_len"
     },
     "model_config": {
@@ -18,9 +19,18 @@
       "n_language": 2,
       "_comment": "Model configurations, do not change unless you need to modify the model"
     },
+    "clf_config": {
+      "model_load_path": "./models/pconv_seame/pconv_seame_epoch_12.ckpt",
+      "save_path": "./models/clfs/pconv_seame/train_seame/",
+      "train": "/local/seame_split/cat/feat2lang_train_final.txt",
+      "valid": "/local/seame_split/cat/feat2lang_test_final.txt",
+      "test": "None",
+      "epochs": 20,
+      "learning_rate": 1e-2
+    },
     "optim_config": {
       "learning_rate": 0.0001,
-      "epochs": 13,
+      "epochs": 5,
       "batch": 128,
       "optimizer": "Adam",
       "scheduler": "warmup_cosine",

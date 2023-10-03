@@ -89,6 +89,7 @@ def validation(valid_txt, model, model_name, device, kaldi, log_dir, num_lang, l
                 labels = labels[:idx]
                 predicted = predicted[:idx]
 
+        
             total += labels.size(-1)
             correct += (predicted == labels).sum().item()
 
@@ -207,8 +208,10 @@ def main():
     # calculate lang_vectors
     batch_sizes = []
     centroids = [None, None]
+    counts_cluster = [[], []]
 
     for step, (utt, labels, seq_len) in enumerate(train_data):
+        print(f'Step: {step}')
         utt_ = utt.to(device=device)
         atten_mask = get_atten_mask(seq_len, utt_.size(0))
         atten_mask = atten_mask.to(device=device)
@@ -257,10 +260,14 @@ def main():
             # clustering label matches truth label
             if correct1 > correct2:
                 correct += correct1
+                counts_cluster[0].append(correct1)
+                counts_cluster[1].append(correct2)
             # clustering label is the inverse of truth label
             else:
                 correct += correct2
                 clustering = 1 - clustering
+                counts_cluster[1].append(correct1)
+                counts_cluster[0].append(correct2)
 
             # save centroids
             class_0_mask = (np.array(clustering) == 0)
@@ -273,13 +280,19 @@ def main():
                 centroids[0] = centroid_0
                 centroids[1] = centroid_1
             else:
-                print(f'centroids[0]: {centroids[0].shape}, controid_0: {centroid_0.shape}')
                 centroids[0] = np.vstack((centroids[0], centroid_0))
                 centroids[1] = np.vstack((centroids[1], centroid_1))
 
             batch_sizes.append(len(valid_labels))
             
             conf_matrix = conf_matrix + confusion_matrix(valid_labels.astype(int), clustering)
+
+            # print(f'centroids[0]: {centroids[0].shape}, controid_0: {centroid_0.shape}')
+            # print(f'counts_cluster[0]: {len(counts_cluster[0])}, counts_cluster[1]: {len(counts_cluster[1])}')
+
+
+            # if step > 3:
+            #     break
 
 
     accuracy = correct/total
@@ -288,11 +301,15 @@ def main():
 
     # calculate whole-batch vectors
     lang_vecs = np.zeros((2, centroids[0].shape[-1]))
-    weights = np.array(batch_sizes) / total
+    # print(f'count_cluster: {counts_cluster}')
+    weights_cluster = []
+    for idx, w in enumerate(counts_cluster):
+        weights_cluster.append(np.array(w)/sum(w))
+        print(f'weight cluster sanity check: {sum(weights_cluster[idx])}')
 
     for idx, cen in enumerate(centroids):
-        print(f'cen.shape: {cen.shape}, weights: {weights.shape}')
-        lang_vecs[idx, :] = np.average(cen, axis=0, weights=weights)
+        print(f'cen.shape: {cen.shape}, weights: {weights_cluster[idx].shape}')
+        lang_vecs[idx, :] = np.average(cen, axis=0, weights=weights_cluster[idx])
 
     # save centroids
     save_dir = './models/clustering/'
