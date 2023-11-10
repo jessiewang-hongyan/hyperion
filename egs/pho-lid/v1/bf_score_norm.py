@@ -154,7 +154,7 @@ def main():
     print(f'device:{device}')
     feat_dim = config_proj["model_config"]["d_k"]
     n_heads = config_proj["model_config"]["n_heads"]
-    model = PHOLID(input_dim=config_proj["model_config"]["feat_dim"],
+    model = PHOLID_conv(input_dim=config_proj["model_config"]["feat_dim"],
                    feat_dim=config_proj["model_config"]["d_k"],
                    d_k=config_proj["model_config"]["d_k"],
                    d_v=config_proj["model_config"]["d_k"],
@@ -205,11 +205,13 @@ def main():
 
     # brute force predict each vector in embeddings
     # pick some mini-batchs as cohort
-    cohort = None
-    cohort_count = 0
-    cohort_total_count = 3
-
+    cohort = []
+    for i in range(num_lang):
+        cohort.append([])
+    max_cohort_num = 14400
+    ignore_index=100
     model.eval()
+
     for step, (utt, labels, seq_len) in enumerate(train_data):
         utt_ = utt.to(device=device)
         atten_mask = get_atten_mask(seq_len, utt_.size(0))
@@ -228,18 +230,55 @@ def main():
 
         outputs = model.bf_check(embeddings, new_seq_len)
         outputs = outputs.squeeze()
+        labels = labels.reshape(-1, 1).squeeze()
 
-        if cohort is None:
-            cohort = outputs
-        elif cohort_count < cohort_total_count:
-            cohort = torch.cat((cohort, outputs), dim=0)
-            cohort_count += 1
-        else:
+        # sample from the mini-batch
+        samples = random.sample(range(0, outputs.shape[0]), 1000)
+
+        # remove paddings
+        clear_samples = []
+        for i in range(num_lang):
+            clear_samples.append([])
+        for s in samples:
+            if int(labels[s]) == ignore_index:
+                continue
+            else:
+                clear_samples[int(labels[s])].append(s)
+        
+        # split by class
+        clear_scores = []
+        for i, s in enumerate(clear_samples):
+            clear_scores.append(outputs[s, i])
+
+        # clear memory
+        del utt_
+        del labels
+        del atten_mask
+        del seq_len
+        del embeddings
+        del outputs
+        del samples
+
+        # store to cohort
+        for idx, s in enumerate(clear_scores):
+            if len(cohort[idx]) == 0:
+                cohort[idx] = s.detach()
+            else:
+                cohort[idx] = torch.cat((cohort[idx], s.detach()), dim=0)
+        for idx, c in enumerate(cohort):
+            print(f"cohort{idx} size: {c.shape}, = {c.shape[0] / (3200*len(train_data))*100}%")
+        
+        if sum([c.shape[0] for c in cohort]) > max_cohort_num:
+            for idx, c in enumerate(cohort):
+                print(f"cohort{idx} size: {c.shape}, = {c.shape[0] / (3200*len(train_data))*100}%")
             break
 
     # calculate mean and std
-    cohort_mu = cohort.mean(dim=0)
-    cohort_std = cohort.std(dim=0)
+    cohort_mu = torch.tensor([c.mean(dim=0) for c in cohort]).to(device)
+    cohort_std = torch.tensor([c.std(dim=0) for c in cohort]).to(device)
+
+    print(f"cohort_mu: {cohort_mu.shape}, {cohort_mu}")
+    print(f"cohort_std: {cohort_std.shape}, {cohort_std}")
     
     if valid_txt is not None:
         print('On val set:')

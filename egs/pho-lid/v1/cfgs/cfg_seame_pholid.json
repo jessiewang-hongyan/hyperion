@@ -1,5 +1,5 @@
 {
-    "model_name": "pholid_seame",
+    "model_name": "pholid_pho_seame",
     "Input": {
       "userroot": "/export/fs05/ywang793/hyperion/egs/pho-lid/v1",
       "train": "/local/seame_split/pure/feat2lang_train_final.txt",

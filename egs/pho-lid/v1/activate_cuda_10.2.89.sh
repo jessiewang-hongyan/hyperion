@@ -1,0 +1,23 @@
+# set CUDA
+export CUDA_HOME=/export/fs05/ywang793/cuda-10.2.89
+export PATH=$CUDA_HOME/bin:$PATH
+export LD_LIBRARY_PATH=$CUDA_HOME/lib64:$LD_LIBRARY_PATH
+export LD_LIBRARY_PATH=$CUDA_HOME/lib:$LD_LIBRARY_PATH
+
+export CUDA_TOOLKIT_ROOT_DIR=$CUDA_HOME
+export CUDA_TOOLKIT_ROOT=$CUDA_HOME
+export CUDA_BIN_PATH=$CUDA_HOME
+export CUDA_PATH=$CUDA_HOME
+export CUDA_INC_PATH=$CUDA_HOME/targets/x86_64-linux
+export CFLAGS=-I$CUDA_HOME/targets/x86_64-linux/include:$CFLAGS
+
+export CUDNN_ROOT=$CUDA_HOME
+export CUDNN_INCLUDE_DIR=$CUDA_HOME/include/
+export CUDNN_LIB_DIR=$CUDA_HOME/lib64/
+export CUDNN_INCLUDE_PATH=$CUDA_HOME/include/
+export CUDNN_LIBRARY_PATH=$CUDA_HOME/lib64/
+export CUDNN_PATH=$CUDA_HOME/lib64/libcudnn.so.7
+export CUDNN_LIBRARY=$CUDA_HOME/lib64/
+
+which nvcc
+nvcc --version

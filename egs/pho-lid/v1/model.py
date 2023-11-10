@@ -327,6 +327,132 @@ class PHOLID_conv(PHOLID):
 
         return output
 
+class PHOLID_conv_pho(PHOLID):
+    def __init__(self,input_dim, feat_dim,
+                 d_k, d_v, d_ff, n_heads=8,
+                 dropout=0.1, n_lang=3, max_seq_len=10000, conv_kernel_size=5):
+        super().__init__(input_dim, feat_dim,
+                 d_k, d_v, d_ff, n_heads,
+                 dropout, n_lang, max_seq_len)
+        self.conv_1 = nn.Conv1d(self.d_model, self.d_model, tuple([conv_kernel_size]),
+                                 padding=tuple([int((conv_kernel_size)/2)]),
+                                 stride=1)
+
+    def forward(self, x, seq_len, mean_mask_=None, weight_mean=None, std_mask_=None, weight_unbaised=None,
+                atten_mask=None, eps=1e-5):
+        # print('---------------------')
+        # print(f"x.shape: {x.shape}")
+        batch_size = x.size(0)
+        T_len = x.size(1)
+        x = x.view(batch_size * T_len, -1, self.input_dim).transpose(-1, -2)
+        x = self.shared_TDNN(x)
+
+        pho_x = x.transpose(-1, -2)
+        pho_out = self.phoneme_proj(pho_x)
+        # print(f'x size: {x.shape}, pho_x size: {x.shape}, pho_out: {pho_out.shape}')
+
+        if self.training:
+            shape = x.size()
+            noise = torch.Tensor(shape)
+            noise = noise.type_as(x)
+            torch.randn(shape, out=noise)
+            x = x + noise * eps
+
+        # print(f'noised x: {x.shape}')
+
+        seg_stats = torch.cat((x.mean(dim=2), x.std(dim=2)), dim=1)
+        embedding = self.fc_xv(seg_stats)
+
+        # print(f'embedding size: {embedding.shape}')
+        embedding = embedding.view(batch_size, T_len, self.feat_dim)
+        # print(f'embedding reshaped size: {embedding.shape}')
+
+        output = self.layernorm1(embedding)
+        # print(f'layernorm 1 size: {output.shape}')
+
+        output = self.pos_encoding(output, seq_len)
+        # print(f'pos_encoding size: {output.shape}')
+
+        output = self.layernorm2(output)
+        # print(f'layernorm 2 size: {output.shape}')
+
+        output = output.unsqueeze(1).repeat(1, self.n_heads, 1, 1)
+        # print(f'output size unsqueeze: {output.shape}')
+        output = output.transpose(1, 2).contiguous().view(batch_size, -1, self.d_model)
+        # print(f'output size transpose: {output.shape}')
+
+        # add conv layer 1
+        # concat phoneme and phonotactic
+        x = x.reshape(batch_size, T_len, x.shape[-2], x.shape[-1])
+        x_mean = torch.mean(x, dim=-1)
+        # print(f"phonotactic: {output.shape}, phoneme: {x_mean.shape}")
+
+        output_x = torch.cat((output, x_mean))
+        # print(f"output_x shape: {output_x.shape}")
+
+        # print(f'The dim of output: {output.shape}, d_model: {self.d_model}')
+        output = output.transpose(1, 2)
+        # print(f'The dim of output after transpose: {output.shape}')
+        output = self.conv_1(output)
+        # print(f'The dim of output after conv: {output.shape}')
+        output = output.transpose(1, 2)
+        # print(f'The dim of attention input: {output.shape}')
+
+        output, _ = self.attention_block1(output, atten_mask)
+        output, _ = self.attention_block2(output, atten_mask)
+
+        # print(f'The dim of attention output: {output.shape}')
+
+        if std_mask_ is not None:
+            stats = self.mean_std_pooling(output, batch_size, seq_len, mean_mask_, weight_mean,
+                                          std_mask_, weight_unbaised)
+        else:
+            stats = torch.cat((output.mean(dim=1), output.std(dim=1)), dim=1)
+    
+        # print(f'stats size: {stats.shape}')
+        
+        output = self.lid_clf(stats)
+
+        # print(f'final output size: {output.shape}')
+
+        return output, pho_out.reshape(batch_size, T_len, -1, 64)
+
+
+    def get_embeddings(self, x, seq_len, atten_mask=None):
+        # self.eval()
+        batch_size = x.size(0)
+        T_len = x.size(1)
+
+        x = x.view(batch_size * T_len, -1, self.input_dim).transpose(-1, -2)
+        x = self.shared_TDNN(x)
+        seg_stats = torch.cat((x.mean(dim=2), x.std(dim=2)), dim=1)
+        embedding = self.fc_xv(seg_stats)
+        embedding = embedding.view(batch_size, T_len, self.feat_dim)
+        output = self.layernorm1(embedding)
+        output = self.pos_encoding(output, seq_len)
+        output = self.layernorm2(output)
+        output = output.unsqueeze(1).repeat(1, self.n_heads, 1, 1)
+        output = output.transpose(1, 2).contiguous().view(batch_size, -1, self.d_model)
+
+        # add conv layer 1
+        
+        output = output.transpose(1, 2)
+        output = self.conv_1(output)
+        output = output.transpose(1, 2)
+
+        output, _ = self.attention_block1(output, atten_mask)
+        output, _ = self.attention_block2(output, atten_mask)
+
+        # print(f'The dim of attention output: {output.shape}')
+        return output
+
+    def bf_check(self, vec, seq_len,  mean_mask_=None, weight_mean=None, std_mask_=None, weight_unbaised=None):
+        batch_size = vec.size(0)
+        vec = vec.squeeze().repeat(1, 1, 2)
+        output = self.lid_clf(vec)
+
+        return output
+
 
 class LD_classifier(nn.Module):
     def __init__(self, in_dim:int, kernel_size:int, lang_lab=0):

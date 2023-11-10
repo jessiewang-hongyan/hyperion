@@ -1,7 +1,7 @@
 #!/bin/bash
 
 #$ -N exp_pholid
-#$ -j y -o /export/c12/ywang793/logs/log.exp_pholid
+#$ -j y -o /export/c12/ywang793/logs/log.exp_pholid_pho
 #$ -M ywang793@jh.edu
 #$ -m e
 #$ -l ram_free=20G,mem_free=20G,gpu=1,hostname=c*
