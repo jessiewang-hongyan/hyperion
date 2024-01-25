@@ -388,7 +388,7 @@ class PHOLID_conv_pho(PHOLID_conv):
 
         return output
 
-    def get_pho_embeddings(self, x, seq_len, atten_mask=None):
+    def get_pho_embeddings(self, x, seq_len, atten_mask=None, norm_pho=True):
         batch_size = x.size(0)
         T_len = x.size(1)
 
@@ -396,6 +396,9 @@ class PHOLID_conv_pho(PHOLID_conv):
         x = self.shared_TDNN(x)
         x = x.reshape(batch_size, T_len, x.shape[-2], x.shape[-1])
         x_mean = torch.mean(x, dim=-1)
+
+        if norm_pho == True:
+            x_mean = torch.nn.functional.normalize(x_mean, dim=-1)
 
         return x_mean
 
