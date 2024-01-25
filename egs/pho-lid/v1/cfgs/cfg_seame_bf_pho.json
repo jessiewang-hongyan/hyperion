@@ -1,12 +1,12 @@
 {
-    "model_name": "pholid_seame_significance",
+    "model_name": "pholid_seame_bf_pho",
     "Input": {
       "userroot": "/export/fs05/ywang793/hyperion/egs/pho-lid/v1",
-      "train": "/local/seame_split/cat/feat2lang_train_final.txt",
-      "valid": "/local/seame_split/cat/feat2lang_test_final.txt",
-      "test":  "/local/merlion_split/feat2lang_cat_test_new.txt",
+      "train": "/local/seame_split/pure/feat2lang_train_final.txt",
+      "valid": "/local/seame_split/pure/feat2lang_test_final.txt",
+      "test":  "/data/merlion/train/processed/feat2lang_test.txt",
       "log": "/logs",
-      "load_path": "./models/pholid_seame_bf_pho/pholid_seame_bf_pho_epoch_4.ckpt",
+      "load_path": "",
       "_comment": "Input your data dir here, each line: data_file_path lable_index segment_len"
     },
     "model_config": {

@@ -1,12 +1,12 @@
 #!/bin/bash
 
-#$ -N exp_pconv_pho
-#$ -j y -o /export/c12/ywang793/logs/log.exp_pconv_pho
+#$ -N new_pconv_pho
+#$ -j y -o /export/c12/ywang793/logs/log.change_pho
 #$ -M ywang793@jh.edu
 #$ -m e
-#$ -l ram_free=20G,mem_free=20G,gpu=1,hostname=c*
+#$ -l ram_free=20G,mem_free=20G,gpu=1,hostname=c0*|c1[012345689]
 #$ -wd /export/fs05/ywang793/hyperion/egs/pho-lid/v1
-# Submit to GPU (c0*|c1[0123456789])
+# Submit to GPU (c0*|c1[0123456789], g.q; d01, p.q)
 #$ -q g.q
 
 source /home/gqin2/scripts/acquire-gpu
@@ -32,7 +32,7 @@ conda activate merlion
 # conda activate merlion4d01
 
 echo "-------------------------"
-echo "for pholid without conv"
+echo "for pholid phoneme+phonotactic"
 echo "-------------------------"
 
 # echo "BF on SEAME pure:"
@@ -40,7 +40,8 @@ echo "-------------------------"
 
 echo "BF on SEAME pure -> SEAME mix:"
 # python bf_PHOLID.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_seame_bf2.json
-python bf_PHOLID_pho.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_seame_bf2_pho.json
+# python train_PHOLID_pho.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_seame_bf_pho.json #--gpu $CUDA_VISIBLE_DEVICES
+python bf_PHOLID_pho.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_seame_bf2_pho.json #--gpu $CUDA_VISIBLE_DEVICES
 
 # echo "BF on SEAME pure -> MERLIon mix:"
 # python bf_PHOLID.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_seame_bf3.json

@@ -10,7 +10,7 @@ import os
 from torch.utils.data import DataLoader
 from tqdm import tqdm
 from scoring_ld import draw_roc
-import scoring_ld as sld
+
 
 def setup_seed(seed):
     torch.manual_seed(seed)
@@ -32,7 +32,7 @@ def get_output(outputs, seq_len):
     return output_
 
 
-def validation(valid_txt, model, model_name, device, kaldi, log_dir, num_lang, ignore_idx=100, verbose=False):
+def validation(valid_txt, model, model_name, device, kaldi, log_dir, num_lang):
     valid_set = RawFeatures(valid_txt)
     valid_data = DataLoader(dataset=valid_set,
                             batch_size=1,
@@ -50,78 +50,40 @@ def validation(valid_txt, model, model_name, device, kaldi, log_dir, num_lang, i
         for step, (utt, labels, seq_len) in enumerate(valid_data):
             utt = utt.to(device=device, dtype=torch.float)
             labels = labels.to(device)
-
-            # Forward pass
-            embeddings = model.get_embeddings(utt, seq_len)
-            embeddings = embeddings.reshape(-1, 1, embeddings.shape[-1])
-
-            batch_size = utt.shape[0]
-            frame_size = utt.shape[1]
-            new_seq_len = [1]* (batch_size*frame_size)
-
-            outputs = model.bf_check(embeddings, new_seq_len)
+            # Forward pass\
+            outputs, _ = model(utt, seq_len)
             predicted = torch.argmax(outputs, -1)
-
-            labels = labels.squeeze()
-            predicted = predicted.squeeze()
-            outputs = outputs.squeeze()
-            if verbose:
-                print(f'outputs: {outputs}')
-                print(f'predicted: {predicted}')
-                print(f'labels: {labels}')
-            # trancate to accuracy len
-            correct_len = min(len(labels), len(predicted))
-            labels = labels[:correct_len]
-            predicted = predicted[:correct_len]
-
-            if ignore_idx in labels:
-                idx = labels.detach().cpu().numpy().tolist().index(ignore_idx)
-                labels = labels[:idx]
-                predicted = predicted[:idx]
-
             total += labels.size(-1)
             correct += (predicted == labels).sum().item()
-
-            # labels = labels.flatten().cpu().tolist()
-            # predicted = predicted.flatten().cpu().tolist()
-
-            if ignore_idx in labels:
-                padding_start = labels.index(ignore_idx)
-                labels = labels[:padding_start]
-                predicted = predicted[:padding_start]
+            # print(f'score_pos: {score_pos}')
 
             if step == 0:
-                scores = [outputs.cpu()]
-                score_pos.append(outputs[:,:1].cpu().numpy().tolist())
-                preds = [predicted.cpu().numpy().astype(int).tolist()]
-                truths = [labels.cpu().numpy().astype(int).tolist()]
+                scores = outputs.cpu()
+                score_pos.append(scores[0][1].item())
+                preds = predicted.cpu()
+                truths = labels.cpu()
             else:
-                scores.append(outputs.cpu())
-                score_pos.append(outputs[:,:1].cpu().numpy().tolist())
-                preds.append(predicted.cpu().numpy().astype(int).tolist())
-                truths.append(labels.cpu().numpy().astype(int).tolist())
-            # if step > 10:
-            #     break
-
-    # print(f"preds: {preds}\ntruths: {truths}")
-
+                scores = torch.cat((scores, outputs.cpu()), dim=0)
+                score_pos.append(scores[0][1].item())
+                preds = torch.cat((preds, predicted.cpu()), dim=0)
+                truths = torch.cat((truths, labels.cpu()), dim=0)
     acc = correct / total
     print('Current Acc.: {:.4f} %'.format(100 * acc))
-    # scores = scores.squeeze().cpu().numpy()
-    # print(scores.shape)
+    scores = scores.squeeze().cpu().numpy()
+    print(scores.shape)
     trial_txt = log_dir + '/trial_{}.txt'.format(model_name)
     score_txt = log_dir + '/score_{}.txt'.format(model_name)
     output_txt = log_dir + '/output_{}.txt'.format(model_name)
-    sld.get_trials(valid_txt, num_lang, trial_txt)
-    sld.get_score(valid_txt, scores, num_lang, score_txt)
+    scoring.get_trials(valid_txt, num_lang, trial_txt)
+    scoring.get_score(valid_txt, scores, num_lang, score_txt)
     eer_txt = trial_txt.replace('trial', 'eer')
     subprocess.call(f"{kaldi}/egs/ywspeech/sre/subtools/computeEER.sh "
                     f"--write-file {eer_txt} {trial_txt} {score_txt}", shell=True)
-    cavg = sld.compute_cavg(trial_txt, score_txt)
-    wacc,accs, weights = sld.compute_wacc(preds, truths, num_lang)
-    bacc = sld.get_bacc(truths, preds)
+    cavg = scoring.compute_cavg(trial_txt, score_txt)
+    wacc,accs, weights = scoring.compute_wacc(preds, truths, num_lang)
+    bacc = scoring.get_bacc(truths, preds)
 
-    # truths = truths.flatten()
+    truths = truths.flatten()
     # draw_roc(truths, score_pos, fname=model_name.replace('.ckpt', '.png'))
     print("Cavg:{}".format(cavg))
     print(f"Balanced Acc:{bacc}, Weighted Acc: {wacc}, Acc by class:{accs}, class weights:{weights}")
@@ -135,7 +97,6 @@ def main():
     parser = argparse.ArgumentParser(description='paras for making data')
     # parser = argparse.ArgumentParser()
     parser.add_argument('--json', type=str, default='xsa_config.json')
-    # parser.add_argument('--gpu', type=str, default="0")
     args = parser.parse_args()
     with open(args.json, 'r') as json_obj:
         config_proj = json.load(json_obj)
@@ -145,10 +106,10 @@ def main():
     else:
         print("Random seed is {}".format(seed))
         setup_seed(seed)
-    device = torch.device('cuda:{}'.format(config_proj["optim_config"]["device"])
-                          if torch.cuda.is_available() else 'cpu')
-    # device = torch.device('cuda:{}'.format(args.gpu)
+    # device = torch.device('cuda:{}'.format(config_proj["optim_config"]["device"])
     #                       if torch.cuda.is_available() else 'cpu')
+    device = torch.device('cuda:{}'.format(0)
+                          if torch.cuda.is_available() else 'cpu')
     print(f'device:{device}')
     feat_dim = config_proj["model_config"]["d_k"]
     n_heads = config_proj["model_config"]["n_heads"]
@@ -162,8 +123,7 @@ def main():
                    n_lang=config_proj["model_config"]["n_language"],
                    max_seq_len=10000)
 
-    if config_proj["Input"]["load_path"] is not None and not config_proj["Input"]["load_path"] == "":
-        model.load_state_dict(torch.load(config_proj["Input"]["load_path"]))
+    # model.load_state_dict(torch.load('./models/pholid_seame_bf/pholid_seame_bf_epoch_4.ckpt'))
     model.to(device)
     model_name = config_proj["model_name"]
     print("model name: {}".format(model_name))
@@ -192,10 +152,10 @@ def main():
     else:
         test_txt = None
 
-    loss_func_lid = nn.CrossEntropyLoss(ignore_index=100).to(device)
+    loss_func_lid = nn.CrossEntropyLoss().to(device)
     num_nega_samples = config_proj["optim_config"]["nega_frames"]
     print("Compute phoneme SSL over segments with {} negative samples".format(num_nega_samples))
-    # loss_func_phn = Phoneme_SSL_loss(num_frames=20, num_sample=num_nega_samples).to(device)
+    loss_func_phn = Phoneme_SSL_loss(num_frames=20, num_sample=num_nega_samples).to(device)
     total_step = len(train_data)
     total_epochs = config_proj["optim_config"]["epochs"]
     valid_epochs = config_proj["optim_config"]["valid_epochs"]
@@ -223,60 +183,61 @@ def main():
     if not os.path.exists(model_save_path):
         os.mkdir(model_save_path)
 
-    # brute force predict each vector in embeddings
+    # training
     for epoch in tqdm(range(total_epochs)):
         model.train()
         for step, (utt, labels, seq_len) in enumerate(train_data):
             utt_ = utt.to(device=device)
             atten_mask = get_atten_mask(seq_len, utt_.size(0))
             atten_mask = atten_mask.to(device=device)
-
-            batch_size = utt.shape[0]
-            frame_size = utt.shape[1]
-            new_seq_len = [1]* (batch_size*frame_size)
-
-            labels = labels.type(torch.LongTensor) 
+            mean_mask_, weight_mean = mean_mask(seq_len, len(seq_len), dim=feat_dim * n_heads)
+            std_mask_, weight_unbaised = std_mask(seq_len, len(seq_len), dim=feat_dim * n_heads)
+            mean_mask_ = mean_mask_.to(device)
+            weight_mean = weight_mean.to(device)
+            std_mask_ = std_mask_.to(device=device)
+            weight_unbaised = weight_unbaised.to(device=device)
             labels = labels.to(device=device)
-
-            # get embeddings
-            embeddings = model.get_embeddings(utt_, seq_len, atten_mask)
-            # print(f'utt: {utt.shape}, labels: {labels.shape}, embeddings: {embeddings.shape}')
-            
-            embeddings = embeddings.reshape(-1, 1, embeddings.shape[-1])
-            # print(f'embeddings: {embeddings.shape}, mean_mask_: {mean_mask_.shape}, new_seq_len: {len(new_seq_len)}')
-
-            batch_size = utt.shape[0]
-            frame_size = utt.shape[1]
-            new_seq_len = [1]* (batch_size*frame_size)
-
-            outputs = model.bf_check(embeddings, new_seq_len)
-            outputs = outputs.squeeze()
-            # print(f'outputs: {outputs.shape}, labels: {labels.shape}')
-            if labels.shape[-1] > 25:
-                labels = labels[:, :25]
-            labels = labels.reshape(batch_size*frame_size)
-            # print(f'outputs: {outputs.shape}, labels: {labels.shape}')
+            # Forward pass
+            outputs, phonemes = model(utt_, seq_len, mean_mask_, weight_mean, std_mask_, weight_unbaised,
+                                    atten_mask=atten_mask)
 
             # Backward and optimize
-            loss = loss_func_lid(outputs, labels)
+            # print(f"outputs size: {outputs.shape}, label size: {labels.shape}")
+            if epoch < SSL_epochs:
+                loss_phn = loss_func_phn(phonemes, seq_len)
+                loss_lid = loss_func_lid(outputs, labels)
+                loss = loss_phn
+            else:
+                loss_lid = loss_func_lid(outputs, labels)
+                loss_phn = loss_func_phn(phonemes, seq_len)
+                loss = weight_lid*loss_lid+weight_ssl*loss_phn
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
             scheduler.step()
             if step % 100 == 0:
-                print("Epoch [{}/{}], Step [{}/{}] Loss: {:.4f}".
-                      format(epoch + 1, total_epochs, step + 1, total_step, loss.item()))
+                print("Epoch [{}/{}], Step [{}/{}] Loss: {:.4f} LID: {:.4f} PHN: {:.4f}".
+                      format(epoch + 1, total_epochs, step + 1, total_step, loss.item(),
+                             loss_lid.item(), loss_phn.item()))
         torch.save(model.state_dict(), '{}_epoch_{}.ckpt'.format(model_save_path+'/'+model_name, epoch))
-        
+    #     if epoch >= total_epochs - valid_epochs - 1:
+    #         if valid_txt is not None:
+    #             print(f'Val set: {valid_txt}')
+    #             validation(valid_txt, model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
+    #                        num_lang=config_proj["model_config"]["n_language"])
+    #         if test_txt is not None:
+    #             print(f'Test set: {test_txt}')
+    #             validation(test_txt, model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
+    #                        num_lang=config_proj["model_config"]["n_language"])
+
     if valid_txt is not None:
-        print('On val set:')
+        print(f'Val set: {valid_txt}')
         validation(valid_txt, model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
                     num_lang=config_proj["model_config"]["n_language"])
     if test_txt is not None:
-        print('On test set:')
+        print(f'Test set: {test_txt}')
         validation(test_txt, model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
                     num_lang=config_proj["model_config"]["n_language"])
-
 
 if __name__ == "__main__":
     main()

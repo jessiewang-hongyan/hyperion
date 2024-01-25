@@ -11,6 +11,7 @@ from torch.utils.data import DataLoader
 from tqdm import tqdm
 from scoring_ld import draw_roc
 import scoring_ld as sld
+from significance import ScoringModel
 
 def setup_seed(seed):
     torch.manual_seed(seed)
@@ -167,6 +168,10 @@ def main():
     model.to(device)
     model_name = config_proj["model_name"]
     print("model name: {}".format(model_name))
+
+    significance_model = ScoringModel(model, n_lang=config_proj["model_config"]["n_language"])
+    significance_model.to(device)
+
     log_dir = config_proj["Input"]["userroot"] + config_proj["Input"]["log"]
     # kaldi_root = config_proj["Input"]["userroot"] + config_proj["kaldi"]
     kaldi_root = config_proj["kaldi"]
@@ -225,7 +230,8 @@ def main():
 
     # brute force predict each vector in embeddings
     for epoch in tqdm(range(total_epochs)):
-        model.train()
+        significance_model.train()
+        model.eval()
         for step, (utt, labels, seq_len) in enumerate(train_data):
             utt_ = utt.to(device=device)
             atten_mask = get_atten_mask(seq_len, utt_.size(0))
@@ -234,28 +240,30 @@ def main():
             batch_size = utt.shape[0]
             frame_size = utt.shape[1]
             new_seq_len = [1]* (batch_size*frame_size)
+            # new_seq_len = torch.Tensor(new_seq_len).to(device)
 
             labels = labels.type(torch.LongTensor) 
             labels = labels.to(device=device)
 
             # get embeddings
-            embeddings = model.get_embeddings(utt_, seq_len, atten_mask)
+            # embeddings = model.get_embeddings(utt_, seq_len, atten_mask)
             # print(f'utt: {utt.shape}, labels: {labels.shape}, embeddings: {embeddings.shape}')
             
-            embeddings = embeddings.reshape(-1, 1, embeddings.shape[-1])
+            # embeddings = embeddings.reshape(-1, 1, embeddings.shape[-1])
             # print(f'embeddings: {embeddings.shape}, mean_mask_: {mean_mask_.shape}, new_seq_len: {len(new_seq_len)}')
 
-            batch_size = utt.shape[0]
-            frame_size = utt.shape[1]
-            new_seq_len = [1]* (batch_size*frame_size)
+            # batch_size = utt.shape[0]
+            # frame_size = utt.shape[1]
+            # new_seq_len = [1]* (batch_size*frame_size)
 
-            outputs = model.bf_check(embeddings, new_seq_len)
-            outputs = outputs.squeeze()
+            # outputs = model.bf_check(embeddings, new_seq_len)
+            outputs = significance_model(utt_, new_seq_len, atten_mask=atten_mask)
+            outputs = outputs.squeeze().reshape(batch_size*frame_size, -1)
             # print(f'outputs: {outputs.shape}, labels: {labels.shape}')
             if labels.shape[-1] > 25:
                 labels = labels[:, :25]
             labels = labels.reshape(batch_size*frame_size)
-            # print(f'outputs: {outputs.shape}, labels: {labels.shape}')
+            print(f'outputs: {outputs.shape}, labels: {labels.shape}')
 
             # Backward and optimize
             loss = loss_func_lid(outputs, labels)
@@ -266,7 +274,7 @@ def main():
             if step % 100 == 0:
                 print("Epoch [{}/{}], Step [{}/{}] Loss: {:.4f}".
                       format(epoch + 1, total_epochs, step + 1, total_step, loss.item()))
-        torch.save(model.state_dict(), '{}_epoch_{}.ckpt'.format(model_save_path+'/'+model_name, epoch))
+        torch.save(significance_model.state_dict(), '{}_epoch_{}.ckpt'.format(model_save_path+'/'+model_name, epoch))
         
     if valid_txt is not None:
         print('On val set:')
