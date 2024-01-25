@@ -20,20 +20,20 @@ class ScoringModel(nn.Module):
 
         self.softmax = nn.Softmax(dim=1)
 
-        self.clf = nn.Sequential(
-            nn.Linear(self.d_model*2, int(self.d_model / 4), bias=True),
-            nn.Tanh(),
-            nn.Linear(int(self.d_model / 4), 1, bias=True)
-        )
+        # self.clf = nn.Sequential(
+        #     nn.Linear(self.d_model*2, int(self.d_model / 4), bias=True),
+        #     nn.Tanh(),
+        #     nn.Linear(int(self.d_model / 4), 1, bias=True)
+        # )
 
     def forward(self, x, seq_len, mean_mask_=None, weight_mean=None, std_mask_=None, weight_unbaised=None,
                 atten_mask=None, eps=1e-5):
 
         # freeze all params in pholidModel
         for param in self.pholidModel.parameters():
-            param.requires_grad = False
-        print(f"x: {type(x)}, {type(seq_len)}, {type(atten_mask)}")
-
+            if param not in self.pholidModel.clf.parameters():
+                param.requires_grad = False
+        # print(f"x: {type(x)}, {type(seq_len)}, {type(atten_mask)}")
 
         print(f"x: {x.shape}")
         batch_size, max_seq_len, _, feat_dim = x.shape
@@ -67,7 +67,7 @@ class ScoringModel(nn.Module):
         # h_repr = h_repr.reshape(batch_size, max_seq_len, n_lang, -1)
         # print(f"h_repr reshape: {h_repr.shape}")
 
-        outputs = self.clf(h_repr)
+        outputs = self.pholidModel.clf(h_repr)
         print(f"outputs: {outputs.shape}")
 
         return outputs
