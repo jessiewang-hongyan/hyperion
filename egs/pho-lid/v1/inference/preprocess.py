@@ -60,10 +60,6 @@ class Preprocess():
         #     break
 
 
-    # TODO: 
-    # 1. make cuts based on vad result
-    # 2. extract audio from a cut, process it to pholid input format
-    # 3. store the preprocessed result and make labels
     def make_cutset(self, vad_file):
         vad_supervision = SupervisionSet.from_rttm(vad_file)
 

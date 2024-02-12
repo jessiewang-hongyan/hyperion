@@ -268,14 +268,15 @@ def main():
                       format(epoch + 1, total_epochs, step + 1, total_step, loss.item()))
         torch.save(model.state_dict(), '{}_epoch_{}.ckpt'.format(model_save_path+'/'+model_name, epoch))
         
-    if valid_txt is not None:
-        print('On val set:')
-        validation(valid_txt, model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
-                    num_lang=config_proj["model_config"]["n_language"])
-    if test_txt is not None:
-        print('On test set:')
-        validation(test_txt, model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
-                    num_lang=config_proj["model_config"]["n_language"])
+        if (epoch + 1) % 5 == 0:
+            if valid_txt is not None:
+                print('On val set:')
+                validation(valid_txt, model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
+                            num_lang=config_proj["model_config"]["n_language"])
+            if test_txt is not None:
+                print('On test set:')
+                validation(test_txt, model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
+                            num_lang=config_proj["model_config"]["n_language"])
 
 
 if __name__ == "__main__":

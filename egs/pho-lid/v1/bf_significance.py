@@ -169,7 +169,7 @@ def main():
     model_name = config_proj["model_name"]
     print("model name: {}".format(model_name))
 
-    significance_model = ScoringModel(model, n_lang=config_proj["model_config"]["n_language"])
+    significance_model = ScoringModel(model, n_lang=config_proj["model_config"]["n_language"], use_pho=False, use_tac=True)
     significance_model.to(device)
 
     log_dir = config_proj["Input"]["userroot"] + config_proj["Input"]["log"]
@@ -263,10 +263,11 @@ def main():
             if labels.shape[-1] > 25:
                 labels = labels[:, :25]
             labels = labels.reshape(batch_size*frame_size)
-            print(f'outputs: {outputs.shape}, labels: {labels.shape}')
+            # print(f'outputs: {outputs.shape}, labels: {labels.shape}')
 
             # Backward and optimize
-            loss = loss_func_lid(outputs, labels)
+            reg_C = 0.1
+            loss = loss_func_lid(outputs, labels) + reg_C * significance_model.get_scoring_reg()
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
@@ -275,15 +276,15 @@ def main():
                 print("Epoch [{}/{}], Step [{}/{}] Loss: {:.4f}".
                       format(epoch + 1, total_epochs, step + 1, total_step, loss.item()))
         torch.save(significance_model.state_dict(), '{}_epoch_{}.ckpt'.format(model_save_path+'/'+model_name, epoch))
-        
-    if valid_txt is not None:
-        print('On val set:')
-        validation(valid_txt, model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
-                    num_lang=config_proj["model_config"]["n_language"])
-    if test_txt is not None:
-        print('On test set:')
-        validation(test_txt, model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
-                    num_lang=config_proj["model_config"]["n_language"])
+        if (epoch + 1) % 5 == 0:
+            if valid_txt is not None:
+                print('On val set:')
+                validation(valid_txt, model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
+                            num_lang=config_proj["model_config"]["n_language"])
+            if test_txt is not None:
+                print('On test set:')
+                validation(test_txt, model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
+                            num_lang=config_proj["model_config"]["n_language"])
 
 
 if __name__ == "__main__":

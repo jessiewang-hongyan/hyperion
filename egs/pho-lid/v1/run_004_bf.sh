@@ -1,10 +1,10 @@
 #!/bin/bash
 
-#$ -N new_pconv_pho
-#$ -j y -o /export/c12/ywang793/logs/log.change_pho
+#$ -N ppho_norm_bf
+#$ -j y -o /export/c12/ywang793/logs/log.ppho_norm_0205
 #$ -M ywang793@jh.edu
 #$ -m e
-#$ -l ram_free=20G,mem_free=20G,gpu=1,hostname=c0*|c1[012345689]
+#$ -l ram_free=20G,mem_free=20G,gpu=1,hostname=c0*|c1[0123456789]
 #$ -wd /export/fs05/ywang793/hyperion/egs/pho-lid/v1
 # Submit to GPU (c0*|c1[0123456789], g.q; d01, p.q)
 #$ -q g.q
@@ -32,7 +32,7 @@ conda activate merlion
 # conda activate merlion4d01
 
 echo "-------------------------"
-echo "for pholid phoneme+phonotactic"
+echo "for ppho bf lr=1e-5"
 echo "-------------------------"
 
 # echo "BF on SEAME pure:"
