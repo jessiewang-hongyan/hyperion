@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#$ -N ppho_norm_0201
-#$ -j y -o /export/c12/ywang793/logs/log.ppho_norm_0201
+#$ -N ppho_no_conv_train
+#$ -j y -o /export/c12/ywang793/logs/log.ppho_no_conv
 #$ -M ywang793@jh.edu
 #$ -m e
 #$ -l ram_free=20G,mem_free=20G,gpu=1,hostname=c*
@@ -34,8 +34,8 @@ conda activate merlion
 # echo "train on merlion:"
 # python train_PHOLID.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_merlion_pholid.json
 
-echo "train on seame:"
-python train_PHOLID.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_seame_pholid.json
+echo "ppho without conv train on seame:"
+python train_PHOLID_pho.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_seame_pholid.json
 # python test_PHOLID.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_seame_pconv.json
 # python bf_PHOLID.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_seame_pconv.json
 # python bf_PHOLID.py --json /export/fs05/ywang793/hyperion/egs/pho-lid/v1/cfgs/cfg_merlion_pconv.json

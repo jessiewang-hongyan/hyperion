@@ -163,13 +163,16 @@ def main():
                    n_lang=config_proj["model_config"]["n_language"],
                    max_seq_len=10000)
 
-    if config_proj["Input"]["load_path"] is not None and not config_proj["Input"]["load_path"] == "":
+    if config_proj["Input"]["load_path"] is not None and not config_proj["Input"]["load_path"] == "None":
         model.load_state_dict(torch.load(config_proj["Input"]["load_path"]))
     model.to(device)
     model_name = config_proj["model_name"]
     print("model name: {}".format(model_name))
 
     significance_model = ScoringModel(model, n_lang=config_proj["model_config"]["n_language"], use_pho=False, use_tac=True)
+    # if config_proj["Input"]["load_path"] is not None and not config_proj["Input"]["load_path"] == "None":
+    #     significance_model.load_state_dict(torch.load(config_proj["Input"]["load_path"]))
+    # significance_model.load_state_dict(torch.load("./models/sig/ppho_seame_bf_0205_relu_reg0_tuned/ppho_seame_bf_0205_relu_reg0_tuned_reg0_lr1e-05_epoch_4.ckpt"))
     significance_model.to(device)
 
     log_dir = config_proj["Input"]["userroot"] + config_proj["Input"]["log"]
@@ -206,8 +209,10 @@ def main():
     valid_epochs = config_proj["optim_config"]["valid_epochs"]
     weight_lid = config_proj["optim_config"]["weight_lid"]
     weight_ssl = config_proj["optim_config"]["weight_ssl"]
-    print("weights: LID {} SSL {}".format(weight_lid, weight_ssl))
-    optimizer = torch.optim.Adam(model.parameters(), lr=config_proj["optim_config"]["learning_rate"])
+    lr = config_proj["optim_config"]["learning_rate"]
+    print("lr: {}, weights: LID {} SSL {}".format(lr, weight_lid, weight_ssl))
+
+    optimizer = torch.optim.Adam(significance_model.parameters(), lr=lr)
     SSL_epochs = config_proj["optim_config"]["SSL_epochs"]
     SSL_steps = SSL_epochs * total_step
     if config_proj["optim_config"]["warmup_step"] == -1:
@@ -223,15 +228,47 @@ def main():
                 math.cos((step - SSL_steps - warmup) / (total_epochs * total_step - SSL_steps - warmup) * math.pi) + 1))
     scheduler = torch.optim.lr_scheduler.LambdaLR(optimizer, lr_lambda=warm_up_with_cosine_lr)
 
+    model.eval()
+    significance_model.eval()
+
+    # print("---------------------")
+    # print("Scoring + model")
+    # print("---------------------")
+    # print('On train set:')
+    # # validation(train_txt, significance_model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
+    # #             num_lang=config_proj["model_config"]["n_language"])
+    # if valid_txt is not None:
+    #     print('On val set:')
+    #     validation(valid_txt, significance_model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
+    #                 num_lang=config_proj["model_config"]["n_language"])
+    # if test_txt is not None:
+    #     print('On test set:')
+    #     validation(test_txt, significance_model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
+    #                 num_lang=config_proj["model_config"]["n_language"])
+    # print("---------------------")
+    # print("Model")
+    # print("---------------------")
+    # print('On train set:')
+    # # validation(train_txt, model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
+    # #             num_lang=config_proj["model_config"]["n_language"])
+    # if valid_txt is not None:
+    #     print('On val set:')
+    #     validation(valid_txt, model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
+    #                 num_lang=config_proj["model_config"]["n_language"])
+    # if test_txt is not None:
+    #     print('On test set:')
+    #     validation(test_txt, model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
+    #                 num_lang=config_proj["model_config"]["n_language"])
+
     # save ckpt in a folder
-    model_save_path = './models/'+model_name
+    model_save_path = './models/sig/'+model_name
     if not os.path.exists(model_save_path):
         os.mkdir(model_save_path)
 
     # brute force predict each vector in embeddings
     for epoch in tqdm(range(total_epochs)):
         significance_model.train()
-        model.eval()
+        # model.eval()
         for step, (utt, labels, seq_len) in enumerate(train_data):
             utt_ = utt.to(device=device)
             atten_mask = get_atten_mask(seq_len, utt_.size(0))
@@ -244,19 +281,7 @@ def main():
 
             labels = labels.type(torch.LongTensor) 
             labels = labels.to(device=device)
-
-            # get embeddings
-            # embeddings = model.get_embeddings(utt_, seq_len, atten_mask)
-            # print(f'utt: {utt.shape}, labels: {labels.shape}, embeddings: {embeddings.shape}')
-            
-            # embeddings = embeddings.reshape(-1, 1, embeddings.shape[-1])
-            # print(f'embeddings: {embeddings.shape}, mean_mask_: {mean_mask_.shape}, new_seq_len: {len(new_seq_len)}')
-
-            # batch_size = utt.shape[0]
-            # frame_size = utt.shape[1]
-            # new_seq_len = [1]* (batch_size*frame_size)
-
-            # outputs = model.bf_check(embeddings, new_seq_len)
+        
             outputs = significance_model(utt_, new_seq_len, atten_mask=atten_mask)
             outputs = outputs.squeeze().reshape(batch_size*frame_size, -1)
             # print(f'outputs: {outputs.shape}, labels: {labels.shape}')
@@ -266,7 +291,7 @@ def main():
             # print(f'outputs: {outputs.shape}, labels: {labels.shape}')
 
             # Backward and optimize
-            reg_C = 0.1
+            reg_C = 10
             loss = loss_func_lid(outputs, labels) + reg_C * significance_model.get_scoring_reg()
             optimizer.zero_grad()
             loss.backward()
@@ -275,14 +300,20 @@ def main():
             if step % 100 == 0:
                 print("Epoch [{}/{}], Step [{}/{}] Loss: {:.4f}".
                       format(epoch + 1, total_epochs, step + 1, total_step, loss.item()))
-        torch.save(significance_model.state_dict(), '{}_epoch_{}.ckpt'.format(model_save_path+'/'+model_name, epoch))
+        torch.save(significance_model.state_dict(), '{}_reg{}_lr{}_epoch_{}.ckpt'.format(model_save_path+'/'+model_name, reg_C, lr, epoch))
         if (epoch + 1) % 5 == 0:
             if valid_txt is not None:
-                print('On val set:')
+                print('On val set, Significance model:')
+                validation(valid_txt, significance_model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
+                            num_lang=config_proj["model_config"]["n_language"])
+                print('On val set, model:')
                 validation(valid_txt, model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
                             num_lang=config_proj["model_config"]["n_language"])
             if test_txt is not None:
-                print('On test set:')
+                print('On test set, Significance model:')
+                validation(test_txt, significance_model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
+                            num_lang=config_proj["model_config"]["n_language"])
+                print('On test set, model:')
                 validation(test_txt, model, model_name, device, kaldi=kaldi_root, log_dir=log_dir,
                             num_lang=config_proj["model_config"]["n_language"])
 

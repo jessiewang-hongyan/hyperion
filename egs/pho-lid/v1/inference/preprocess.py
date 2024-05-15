@@ -126,8 +126,8 @@ class Preprocess():
             outputs = model.bf_check(embeddings, new_seq_len)
             predicted = torch.argmax(outputs, -1).squeeze()
 
-            print(f"feat.shape: {feat.shape}, seq_len: {seq_len}")
-            print(f"original_file: {original_file}, start: {start}, duration: {duration}, result: {outputs}, pred: {predicted}")
+            # print(f"feat.shape: {feat.shape}, seq_len: {seq_len}")
+            # print(f"original_file: {original_file}, start: {start}, duration: {duration}, result: {outputs}, pred: {predicted}")
             
             with open(export_file, "a") as f:
                 if seq_len[0] > 1:

@@ -25,4 +25,5 @@ LD_LIBRARY_PATH=/export/fs05/ywang793/miniconda3/lib
 # python ./dscore/score.py -r ./inference/outputs/merlion_ground_truth_channel0.rttm -s ./inference/outputs/merlion_pred.rttm 
 
 # python ./dscore/score.py -r ./inference/outputs/seame_ground_truth_channel0.rttm -s ./inference/outputs/seame_pred_pho.rttm 
-python ./dscore/score.py -r ./inference/outputs/seame_ground_truth_channel0.rttm -s ./inference/outputs/seame_pred_conv.rttm 
+python ./dscore/score.py -r ./inference/outputs/seame_ground_truth_channel0.rttm -s ./inference/outputs/seame_pred_ppho_tune.rttm 
+python ./dscore/score.py -r ./inference/outputs/merlion_ground_truth_channel0.rttm -s ./inference/outputs/merlion_pred_ppho_tune.rttm 

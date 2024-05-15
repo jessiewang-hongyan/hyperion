@@ -151,7 +151,7 @@ def main():
     print(f'device:{device}')
     feat_dim = config_proj["model_config"]["d_k"]
     n_heads = config_proj["model_config"]["n_heads"]
-    model = PHOLID(input_dim=config_proj["model_config"]["feat_dim"],
+    model = PHOLID_conv_pho(input_dim=config_proj["model_config"]["feat_dim"],
                    feat_dim=config_proj["model_config"]["d_k"],
                    d_k=config_proj["model_config"]["d_k"],
                    d_v=config_proj["model_config"]["d_k"],

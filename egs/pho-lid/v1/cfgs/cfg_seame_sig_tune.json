@@ -1,0 +1,48 @@
+{
+    "model_name": "ppho_seame_bf_0205_clf_english_tuned",
+    "Input": {
+      "userroot": "/export/fs05/ywang793/hyperion/egs/pho-lid/v1",
+      "train": "/local/merlion_split/feat2lang_cat_train_new.txt",
+      "valid": "/local/seame_split/cat/feat2lang_test_final.txt",
+      "test":  "/local/merlion_split/feat2lang_cat_test_new.txt",
+      "log": "/logs",
+      "load_path": "./models/sig/ppho_seame_bf_0205_clf_english/ppho_seame_bf_0205_clf_english_reg10_lr1e-05_epoch_4.ckpt",
+      "_comment": "Input your data dir here, each line: data_file_path lable_index segment_len"
+    },
+    "model_config": {
+      "model": "pholid",
+      "feat_dim": 1024,
+      "reduc_dim": 256,
+      "d_k": 64,
+      "d_ff": 2048,
+      "n_heads": 8,
+      "n_language": 2,
+      "_comment": "Model configurations, do not change unless you need to modify the model"
+    },
+    "optim_config": {
+      "learning_rate": 0.00001,
+      "epochs": 5,
+      "batch": 128,
+      "optimizer": "Adam",
+      "scheduler": "warmup_cosine",
+      "num_work": 4,
+      "device": 0,
+      "DDP": false,
+      "SSL_epochs":3,
+      "warmup_step": -1,
+      "valid_epochs": 3,
+      "seed": 66,
+      "ptc_dist":"euclidean",
+      "margin":0.3,
+      "weight_lid":0.95,
+      "weight_pht":0.15,
+      "weight_ssl":0.05,
+      "phn_ssl":"seg",
+      "nega_frames":3,
+      "hard_sample_epochs":0,
+      "_comment": "warmup_step = -1 denotes default value, num_work is better to be your_cpu_cores/4"
+    },
+    "kaldi": "/export/fs05/ywang793/hyperion/tools/kaldi"
+  
+  }
+  

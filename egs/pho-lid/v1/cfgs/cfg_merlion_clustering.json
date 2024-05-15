@@ -1,12 +1,12 @@
 {
-    "model_name": "pholid_merlion_clustering",
+    "model_name": "ppho_merlion_clustering",
     "Input": {
       "userroot": "/export/fs05/ywang793/hyperion/egs/pho-lid/v1",
-      "train": "/local/seame_split/cat/feat2lang_train_final.txt",
+      "train": "/local/merlion_split/feat2lang_cat_train_new.txt",
       "valid": "/local/merlion_split/feat2lang_cat_test_new.txt",
       "test":  "/local/seame_split/cat/feat2lang_test_final.txt",
       "log": "/logs",
-      "load_path": "./models/pconv_seame/pconv_seame_epoch_12.ckpt",
+      "load_path": "./models/ppho_norm_seame_bf_0205/ppho_norm_seame_bf_0205_epoch_4.ckpt",
       "_comment": "Input your data dir here, each line: data_file_path lable_index segment_len"
     },
     "model_config": {

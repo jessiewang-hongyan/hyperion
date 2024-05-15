@@ -1,7 +1,7 @@
 #!/bin/bash
 
-#$ -N exp_ahc_s
-#$ -j y -o /export/c12/ywang793/logs/log.exp_ahc_s
+#$ -N clustering_ppho_merlion
+#$ -j y -o /export/fs05/ywang793/logs/log.clustering_ppho_merlion
 #$ -M ywang793@jh.edu
 #$ -m e
 #$ -l ram_free=20G,mem_free=20G,gpu=1,hostname=c*

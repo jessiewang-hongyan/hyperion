@@ -113,7 +113,7 @@ def main():
     print(f'device:{device}')
     feat_dim = config_proj["model_config"]["d_k"]
     n_heads = config_proj["model_config"]["n_heads"]
-    model = PHOLID_conv_pho(input_dim=config_proj["model_config"]["feat_dim"],
+    model = PHOLID_conv(input_dim=config_proj["model_config"]["feat_dim"],
                    feat_dim=config_proj["model_config"]["d_k"],
                    d_k=config_proj["model_config"]["d_k"],
                    d_v=config_proj["model_config"]["d_k"],
@@ -123,6 +123,8 @@ def main():
                    n_lang=config_proj["model_config"]["n_language"],
                    max_seq_len=10000)
 
+    if config_proj["Input"]["load_path"] is not None and not config_proj["Input"]["load_path"] == "None":
+        model.load_state_dict(torch.load(config_proj["Input"]["load_path"]))
     # model.load_state_dict(torch.load('./models/pholid_seame_bf/pholid_seame_bf_epoch_4.ckpt'))
     model.to(device)
     model_name = config_proj["model_name"]
